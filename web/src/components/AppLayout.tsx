@@ -64,7 +64,21 @@ export function AppLayout() {
         </div>
         {loading && <p className="mb-4 text-sm text-ink-muted">Sincronizando…</p>}
         {error && (
-          <p className="mb-4 rounded-xl border border-red-900/50 bg-red-950/40 px-3 py-2 text-sm text-danger">{error}</p>
+          <div className="mb-4 rounded-xl border border-red-900/50 bg-red-950/40 px-3 py-2 text-sm text-danger">
+            <p>{error}</p>
+            {(error.toLowerCase().includes('authentication') || error.toLowerCase().includes('token')) && (
+              <button
+                type="button"
+                className="mt-2 underline"
+                onClick={() => {
+                  clearAuth()
+                  navigate('/login')
+                }}
+              >
+                Entrar novamente com Google
+              </button>
+            )}
+          </div>
         )}
         <Outlet />
       </main>

@@ -1,9 +1,12 @@
-import { getAccessToken } from './auth'
+import { forceRelogin, getAccessToken, isAuthErrorMessage } from './auth'
 import type { Agendamento, Barbeiro, StatusAgendamento } from '../data/barbeariaConfig'
 
 async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getAccessToken()
-  if (!token) throw new Error('Faça login com Google para continuar')
+  if (!token) {
+    forceRelogin('Sessão expirada. Entre novamente com o Google.')
+    throw new Error('Sessão expirada')
+  }
 
   const res = await fetch(`/api/${path}`, {
     ...options,
@@ -16,7 +19,11 @@ async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
-    throw new Error(data.error || `Erro ${res.status}`)
+    const message = data.error || `Erro ${res.status}`
+    if (res.status === 401 || isAuthErrorMessage(message)) {
+      forceRelogin('Sessão do Google expirada. Entre novamente.')
+    }
+    throw new Error(message)
   }
   return data as T
 }
@@ -29,6 +36,9 @@ export async function fetchAuthConfig() {
     clientId: string
     barbeiros: string[]
     calendars: Record<string, string>
+    sharedCalendarId?: string
+    modo?: string
+    aviso?: string
   }
 }
 
@@ -52,7 +62,6 @@ export async function listAgendamentos(params: {
   const qs = new URLSearchParams({
     timeMin: params.timeMin,
     timeMax: params.timeMax,
-    barbeiro: params.barbeiro || 'todos',
   })
   const data = await api<{ agendamentos: Agendamento[] }>(`calendar-list?${qs}`)
   return data.agendamentos

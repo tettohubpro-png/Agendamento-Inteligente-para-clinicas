@@ -33,7 +33,7 @@ function seedEmpresa(): EmpresaConfig {
     telefone: '(98) 99233-1897',
     whatsapp: '98 99233-1897',
     whatsappLink: 'https://wa.me/5598992331897?text=Olá!%20Quero%20agendar%20um%20horário%20na%20BOMCORTE',
-    email: 'contato@bomcorte.com.br',
+    email: 'bomcorteslz@gmail.com',
     pix: '',
     banco: '',
     horarioAbertura: '08:30',
@@ -52,7 +52,7 @@ function seedBarbeiros(): Barbeiro[] {
     horarioFim: '18:00',
     diasFolga: [],
     comissaoPercentual: 50,
-    calendarId: 'primary',
+    calendarId: '',
     ativo: true,
   }]
 }
@@ -82,8 +82,9 @@ function seedProdutos(): Produto[] {
 
 function seedUsuarios(): Usuario[] {
   return [
-    { id: 'u1', email: 'tettohub@gmail.com', nome: 'Proprietário', role: 'proprietario', ativo: true },
-    { id: 'u2', email: 'maycon@bomcorte.com.br', nome: 'Maycon', role: 'barbeiro', barbeiroId: 'barbeiro-maycon', ativo: true },
+    { id: 'u1', email: 'bomcorteslz@gmail.com', nome: 'BOMCORTE', role: 'proprietario', ativo: true },
+    { id: 'u2', email: 'tettohub@gmail.com', nome: 'Proprietário', role: 'proprietario', ativo: true },
+    { id: 'u3', email: 'maycon@bomcorte.com.br', nome: 'Maycon', role: 'barbeiro', barbeiroId: 'barbeiro-maycon', ativo: true },
   ]
 }
 
@@ -128,13 +129,38 @@ export function saveState(state: ErpState) {
 export function resolveUserRole(email: string, usuarios: Usuario[]): Usuario | null {
   const found = usuarios.find((u) => u.email.toLowerCase() === email.toLowerCase() && u.ativo)
   if (found) return found
-  return {
+  return null
+}
+
+export function ensureUsuario(
+  state: ErpState,
+  input: { email: string; nome?: string; fotoUrl?: string; role?: Usuario['role'] },
+): ErpState {
+  const email = input.email.trim().toLowerCase()
+  if (!email) return state
+  const existing = state.usuarios.find((u) => u.email.toLowerCase() === email)
+  if (existing) {
+    const nome = input.nome?.trim() || existing.nome
+    const fotoUrl = input.fotoUrl ?? existing.fotoUrl
+    if (nome === existing.nome && fotoUrl === existing.fotoUrl && existing.ativo) return state
+    return {
+      ...state,
+      usuarios: state.usuarios.map((u) =>
+        u.id === existing.id
+          ? { ...u, nome, fotoUrl, ativo: true }
+          : u,
+      ),
+    }
+  }
+  const novo: Usuario = {
     id: uid(),
     email,
-    nome: email.split('@')[0],
-    role: 'proprietario',
+    nome: input.nome?.trim() || email.split('@')[0],
+    fotoUrl: input.fotoUrl,
+    role: input.role ?? 'recepcionista',
     ativo: true,
   }
+  return { ...state, usuarios: [...state.usuarios, novo] }
 }
 
 export function mapCalendarStatus(status: string): AgendamentoStatus {
@@ -151,20 +177,16 @@ export function mapCalendarStatus(status: string): AgendamentoStatus {
 }
 
 export function mergeCalendarAgendamentos(
-  local: Agendamento[],
+  _local: Agendamento[],
   fromCalendar: Agendamento[],
 ): Agendamento[] {
-  const map = new Map(local.map((a) => [a.id, a]))
-  for (const cal of fromCalendar) {
-    const existing = map.get(cal.id)
-    map.set(cal.id, {
-      ...cal,
-      status: existing?.status && existing.status !== 'agendado' ? existing.status : mapCalendarStatus(cal.status),
-      barbeiroId: existing?.barbeiroId ?? 'barbeiro-maycon',
-      duracaoMinutos: existing?.duracaoMinutos ?? 30,
-    })
-  }
-  return [...map.values()]
+  // Fonte da verdade = agenda compartilhada BOMCORTE (não misturar cache local antigo)
+  return fromCalendar.map((cal) => ({
+    ...cal,
+    status: mapCalendarStatus(cal.status),
+    barbeiroId: 'barbeiro-maycon',
+    duracaoMinutos: 30,
+  }))
 }
 
 export function calcHorariosLivres(agendamentos: Agendamento[], data: string): number {

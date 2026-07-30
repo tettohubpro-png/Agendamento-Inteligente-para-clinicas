@@ -7,16 +7,36 @@ import { ROLE_LABELS } from '../lib/permissions'
 import type { UserRole } from '../types/erp'
 
 export function ConfiguracoesPage() {
-  const { state, updateEmpresa, updateUsuarios } = useErp()
+  const { state, updateEmpresa, updateUsuarios, addUsuario } = useErp()
   const { usuario } = useAuth()
   const [form, setForm] = useState(state.empresa)
   const [salvo, setSalvo] = useState(false)
+  const [novoNome, setNovoNome] = useState('')
+  const [novoEmail, setNovoEmail] = useState('')
+  const [novoRole, setNovoRole] = useState<UserRole>('barbeiro')
+  const [erroUsuario, setErroUsuario] = useState('')
+  const [okUsuario, setOkUsuario] = useState('')
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
     updateEmpresa(form)
     setSalvo(true)
     setTimeout(() => setSalvo(false), 2000)
+  }
+
+  function onAddUsuario(e: FormEvent) {
+    e.preventDefault()
+    setErroUsuario('')
+    setOkUsuario('')
+    const err = addUsuario({ email: novoEmail, nome: novoNome, role: novoRole })
+    if (err) {
+      setErroUsuario(err)
+      return
+    }
+    setOkUsuario('Usuário cadastrado. Libere o e-mail também em Usuários de teste no Google Cloud.')
+    setNovoNome('')
+    setNovoEmail('')
+    setNovoRole('barbeiro')
   }
 
   return (
@@ -50,7 +70,44 @@ export function ConfiguracoesPage() {
       <PermissionGate permission="usuarios:edit">
         <section className="mt-8 rounded-2xl border border-line bg-panel p-6">
           <h2 className="font-display text-xl">Usuários e permissões</h2>
-          <p className="mt-1 text-sm text-ink-muted">Cada login Google recebe um papel no sistema.</p>
+          <p className="mt-1 text-sm text-ink-muted">
+            Cadastre o Gmail aqui (só para login) e libere o mesmo e-mail em <strong>Público-alvo → Usuários de teste</strong> no Google Cloud.
+            A agenda é única e compartilhada — não depende do calendário pessoal de cada um.
+          </p>
+
+          <form onSubmit={onAddUsuario} className="mt-4 space-y-3 rounded-xl border border-line bg-surface-2 p-4">
+            <h3 className="text-sm font-medium">Adicionar usuário</h3>
+            <input
+              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
+              placeholder="Nome"
+              value={novoNome}
+              onChange={(e) => setNovoNome(e.target.value)}
+              required
+            />
+            <input
+              type="email"
+              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
+              placeholder="Gmail (ex: maycon@gmail.com)"
+              value={novoEmail}
+              onChange={(e) => setNovoEmail(e.target.value)}
+              required
+            />
+            <select
+              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm"
+              value={novoRole}
+              onChange={(e) => setNovoRole(e.target.value as UserRole)}
+            >
+              {Object.entries(ROLE_LABELS).map(([k, v]) => (
+                <option key={k} value={k}>{v}</option>
+              ))}
+            </select>
+            {erroUsuario && <p className="text-sm text-danger">{erroUsuario}</p>}
+            {okUsuario && <p className="text-sm text-ok">{okUsuario}</p>}
+            <button type="submit" className="w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-surface hover:bg-brand-deep">
+              Cadastrar Gmail
+            </button>
+          </form>
+
           <ul className="mt-4 space-y-3">
             {state.usuarios.map((u) => (
               <li key={u.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface-2 px-4 py-3 text-sm">
@@ -58,18 +115,29 @@ export function ConfiguracoesPage() {
                   <p className="font-medium">{u.nome}</p>
                   <p className="text-ink-muted">{u.email}</p>
                 </div>
-                <select
-                  className="rounded-lg border border-line bg-surface px-2 py-1"
-                  value={u.role}
-                  onChange={(e) => {
-                    const role = e.target.value as UserRole
-                    updateUsuarios(state.usuarios.map((x) => (x.id === u.id ? { ...x, role } : x)))
-                  }}
-                >
-                  {Object.entries(ROLE_LABELS).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-2">
+                  <select
+                    className="rounded-lg border border-line bg-surface px-2 py-1"
+                    value={u.role}
+                    onChange={(e) => {
+                      const role = e.target.value as UserRole
+                      updateUsuarios(state.usuarios.map((x) => (x.id === u.id ? { ...x, role } : x)))
+                    }}
+                  >
+                    {Object.entries(ROLE_LABELS).map(([k, v]) => (
+                      <option key={k} value={k}>{v}</option>
+                    ))}
+                  </select>
+                  {u.email !== usuario?.email && (
+                    <button
+                      type="button"
+                      className="text-xs text-danger hover:underline"
+                      onClick={() => updateUsuarios(state.usuarios.filter((x) => x.id !== u.id))}
+                    >
+                      Remover
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

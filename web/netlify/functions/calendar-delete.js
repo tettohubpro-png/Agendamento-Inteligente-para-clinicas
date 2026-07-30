@@ -2,7 +2,7 @@ const {
   json,
   corsPreflight,
   getAccessToken,
-  resolveCalendarId,
+  resolveSharedCalendarId,
   calendarFetch,
 } = require('./_shared/calendar')
 
@@ -26,13 +26,10 @@ exports.handler = async (event) => {
 
   const params = event.queryStringParameters || {}
   const id = body.id || params.id
-  const barbeiro = body.barbeiro || body.medico || params.barbeiro || params.medico
-  const calendarId = body.calendarId || params.calendarId || resolveCalendarId(barbeiro)
-
   if (!id) return json(400, { error: 'id do evento é obrigatório' })
-  if (!calendarId) return json(400, { error: 'calendarId ou barbeiro é obrigatório' })
 
   try {
+    const { calendarId } = await resolveSharedCalendarId(token)
     await calendarFetch(
       `/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(id)}`,
       token,

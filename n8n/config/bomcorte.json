@@ -8,8 +8,13 @@
     "pagamentos": ["PIX", "Dinheiro", "Cartão de débito", "Cartão de crédito"]
   },
   "barbeiros": [
-    { "nome": "Maycon", "calendarId": "primary", "calendarEmail": "fluxionai7@gmail.com" }
+    { "nome": "Maycon", "calendarId": "bomcorteslz@gmail.com", "nota": "Agenda única = Gmail principal BOMCORTE" }
   ],
+  "agendaCompartilhada": {
+    "env": "GOOGLE_CALENDAR_ID",
+    "valor": "bomcorteslz@gmail.com",
+    "descricao": "Uma única agenda Google (conta bomcorteslz). Outros Gmails só para login."
+  },
   "combos": [
     { "nome": "Combo Essencial", "descricao": "Corte + Barba + Lavagem", "preco": 70 },
     { "nome": "Combo Black", "descricao": "Corte + Barba + Lavagem + Sobrancelha", "preco": 85 },

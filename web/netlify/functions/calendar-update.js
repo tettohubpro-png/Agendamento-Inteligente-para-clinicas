@@ -2,7 +2,7 @@ const {
   json,
   corsPreflight,
   getAccessToken,
-  resolveCalendarId,
+  resolveSharedCalendarId,
   toEventBody,
   isOpenDay,
   isValidSlot,
@@ -26,30 +26,16 @@ exports.handler = async (event) => {
     return json(400, { error: 'JSON inválido' })
   }
 
-  const {
-    id,
-    calendarId: bodyCalendarId,
-    nome,
-    telefone,
-    email,
-    barbeiro,
-    medico,
-    servico,
-    valor,
-    data,
-    hora,
-    status,
-  } = body
+  const { id, nome, telefone, email, barbeiro, medico, servico, valor, data, hora, status } = body
   const barb = barbeiro || medico
   if (!id) return json(400, { error: 'id do evento é obrigatório' })
-
-  const calendarId = bodyCalendarId || resolveCalendarId(barb)
-  if (!calendarId) return json(400, { error: 'calendarId ou barbeiro é obrigatório' })
 
   if (data && !isOpenDay(data)) return json(400, { error: 'Agende apenas de segunda a sábado' })
   if (hora && !isValidSlot(hora)) return json(400, { error: 'Horário inválido' })
 
   try {
+    const { calendarId } = await resolveSharedCalendarId(token)
+
     const current = await calendarFetch(
       `/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(id)}`,
       token,
@@ -65,7 +51,7 @@ exports.handler = async (event) => {
       valor: valor ?? mapped?.valor,
       data: data || mapped?.data,
       hora: hora || mapped?.hora,
-      status: status || mapped?.status || 'aguardando',
+      status: status || mapped?.status || 'confirmado',
     }
 
     const updated = await calendarFetch(

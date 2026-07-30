@@ -22,30 +22,71 @@ function getAccessToken(event) {
   return match ? match[1].trim() : null
 }
 
+/**
+ * Agenda ÚNICA da BOMCORTE.
+ * Nunca usa "primary" (agenda pessoal do Gmail logado).
+ *
+ * Ordem:
+ * 1) GOOGLE_CALENDAR_ID (env)
+ * 2) Agenda na lista do usuário com nome "BOMCORTE"
+ */
+function configuredCalendarId() {
+  const id = (
+    process.env.GOOGLE_CALENDAR_ID ||
+    process.env.VITE_GOOGLE_CALENDAR_ID ||
+    process.env.AGENDA_BOMCORTE_ID ||
+    ''
+  ).trim()
+  if (!id || id.toLowerCase() === 'primary') return ''
+  return id
+}
+
+async function resolveSharedCalendarId(accessToken) {
+  const configured = configuredCalendarId()
+  if (configured) return { calendarId: configured, source: 'env' }
+
+  const data = await calendarFetch('/users/me/calendarList?maxResults=250', accessToken)
+  const items = data.items || []
+  const bomcorte = items.find((c) => {
+    const name = (c.summary || '').trim().toLowerCase()
+    return name === 'bomcorte' || name === 'agenda bomcorte' || name.startsWith('bomcorte')
+  })
+
+  if (bomcorte?.id && bomcorte.id !== 'primary' && !bomcorte.primary) {
+    return { calendarId: bomcorte.id, source: 'calendarList', name: bomcorte.summary }
+  }
+
+  // Se achar pelo nome mas for primary (alguém renomeou a pessoal), rejeita
+  if (bomcorte?.primary) {
+    const err = new Error(
+      'A agenda "BOMCORTE" não pode ser a agenda pessoal do Gmail. Crie uma agenda nova chamada BOMCORTE e compartilhe com a equipe.',
+    )
+    err.status = 400
+    throw err
+  }
+
+  const err = new Error(
+    'Agenda compartilhada não encontrada. Crie no Google Calendar uma agenda chamada "BOMCORTE", compartilhe com todos os Gmails da equipe (permissão: fazer alterações) e atualize os dados.',
+  )
+  err.status = 404
+  throw err
+}
+
+function sharedCalendarId() {
+  return configuredCalendarId()
+}
+
 function calendarIds() {
-  if (process.env.BARBEIROS_CALENDARS) {
-    try {
-      return JSON.parse(process.env.BARBEIROS_CALENDARS)
-    } catch {
-      // fallback
-    }
-  }
-  return {
-    Maycon:
-      process.env.CALENDAR_MAYCON_ID ||
-      process.env.VITE_CALENDAR_MAYCON_ID ||
-      'primary',
-  }
+  const id = sharedCalendarId()
+  return id ? { BOMCORTE: id } : {}
 }
 
 function barbeirosList() {
-  return Object.keys(calendarIds())
+  return ['Maycon']
 }
 
-function resolveCalendarId(barbeiro) {
-  const ids = calendarIds()
-  if (!barbeiro || barbeiro === 'todos') return null
-  return ids[barbeiro] || null
+function resolveCalendarId(_barbeiro) {
+  return sharedCalendarId() || null
 }
 
 function addMinutes(isoDate, hhmm, minutes) {
@@ -61,7 +102,7 @@ function addMinutes(isoDate, hhmm, minutes) {
 }
 
 function buildSummary({ nome, hora, servico, barbeiro }) {
-  return `${nome} | ${hora} | ${servico} | ${barbeiro}`
+  return `${nome} | ${hora} | ${servico} | ${barbeiro || 'Maycon'}`
 }
 
 function buildDescription({ telefone, email, status, servico, valor }) {
@@ -96,7 +137,16 @@ function parseSummary(summary = '') {
   return { nome: summary || 'Cliente', hora: '', servico: '', barbeiro: 'Maycon' }
 }
 
+/** Só eventos no formato BOMCORTE: Nome | HH:mm | Serviço | Barbeiro */
+function isBomcorteEvent(event) {
+  const summary = event.summary || ''
+  if (!summary.includes('|')) return false
+  const parts = summary.split('|').map((p) => p.trim())
+  return parts.length >= 3
+}
+
 function eventToAgendamento(event, barbeiro, calendarId) {
+  if (!isBomcorteEvent(event)) return null
   const start = event.start?.dateTime || event.start?.date
   if (!start) return null
   const data = start.slice(0, 10)
@@ -141,14 +191,14 @@ function toEventBody(payload) {
 function isOpenDay(isoDate) {
   const d = new Date(`${isoDate}T12:00:00`)
   const day = d.getDay()
-  return day >= 1 && day <= 6 // seg–sáb
+  return day >= 1 && day <= 6
 }
 
 function isValidSlot(hora) {
   const [h, m] = hora.split(':').map(Number)
   const total = h * 60 + m
-  const start = 8 * 60 + 30 // 08:30
-  const end = 18 * 60 // 18:00
+  const start = 8 * 60 + 30
+  const end = 18 * 60
   return total >= start && total < end && m % 30 === 0
 }
 
@@ -182,10 +232,14 @@ module.exports = {
   json,
   corsPreflight,
   getAccessToken,
+  configuredCalendarId,
+  resolveSharedCalendarId,
+  sharedCalendarId,
   calendarIds,
   barbeirosList,
   resolveCalendarId,
   eventToAgendamento,
+  isBomcorteEvent,
   toEventBody,
   isOpenDay,
   isValidSlot,

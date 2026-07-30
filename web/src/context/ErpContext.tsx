@@ -11,6 +11,7 @@ import {
   abrirCaixa,
   addCliente,
   checkEstoqueBaixo,
+  ensureUsuario,
   fecharCaixa,
   hoje,
   loadState,
@@ -30,6 +31,8 @@ import type {
   EmpresaConfig,
   ErpState,
   FormaPagamento,
+  UserRole,
+  Usuario,
 } from '../types/erp'
 import type { CreateAgendamentoInput } from '../lib/calendarApi'
 import { createAgendamento, deleteAgendamento, updateAgendamento } from '../lib/calendarApi'
@@ -56,6 +59,8 @@ type ErpContextValue = {
   // Config
   updateEmpresa: (data: Partial<EmpresaConfig>) => void
   updateUsuarios: (usuarios: ErpState['usuarios']) => void
+  addUsuario: (input: { email: string; nome: string; role: UserRole }) => string | null
+  ensureLoggedUser: (input: { email: string; nome?: string; fotoUrl?: string }) => void
   marcarNotificacaoLida: (id: string) => void
   persist: () => void
 }
@@ -120,8 +125,8 @@ export function ErpProvider({ children }: { children: ReactNode }) {
     setError('')
     try {
       const { timeMin, timeMax } = rangeWindow()
-      const fromCalendar = await listAgendamentos({ timeMin, timeMax, barbeiro: 'todos' })
-      const merged = mergeCalendarAgendamentos(state.agendamentos, fromCalendar as Agendamento[])
+      const fromCalendar = await listAgendamentos({ timeMin, timeMax })
+      const merged = mergeCalendarAgendamentos([], fromCalendar as Agendamento[])
       const estoqueNotifs = checkEstoqueBaixo({ ...state, agendamentos: merged })
       setState((prev) => ({
         ...prev,
@@ -132,11 +137,20 @@ export function ErpProvider({ children }: { children: ReactNode }) {
         ],
       }))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Falha ao sincronizar')
+      const message = err instanceof Error ? err.message : 'Falha ao sincronizar'
+      setError(message)
+      // Limpa eventos antigos do Gmail pessoal quando a agenda compartilhada falha/não existe
+      if (
+        message.toLowerCase().includes('bomcorte') ||
+        message.toLowerCase().includes('compartilhada') ||
+        message.toLowerCase().includes('não encontrada')
+      ) {
+        setState((prev) => ({ ...prev, agendamentos: [] }))
+      }
     } finally {
       setLoading(false)
     }
-  }, [state.agendamentos])
+  }, [state])
 
   useEffect(() => {
     void refresh()
@@ -216,6 +230,23 @@ export function ErpProvider({ children }: { children: ReactNode }) {
         })),
       updateEmpresa: (data) => setState((prev) => ({ ...prev, empresa: { ...prev.empresa, ...data } })),
       updateUsuarios: (usuarios) => setState((prev) => ({ ...prev, usuarios })),
+      addUsuario: ({ email, nome, role }) => {
+        const clean = email.trim().toLowerCase()
+        if (!clean || !clean.includes('@')) return 'Informe um e-mail válido.'
+        if (state.usuarios.some((u) => u.email.toLowerCase() === clean)) {
+          return 'Este e-mail já está cadastrado.'
+        }
+        const novo: Usuario = {
+          id: crypto.randomUUID(),
+          email: clean,
+          nome: nome.trim() || clean.split('@')[0],
+          role,
+          ativo: true,
+        }
+        setState((prev) => ({ ...prev, usuarios: [...prev.usuarios, novo] }))
+        return null
+      },
+      ensureLoggedUser: (input) => setState((prev) => ensureUsuario(prev, input)),
       marcarNotificacaoLida: (id) =>
         setState((prev) => ({
           ...prev,
