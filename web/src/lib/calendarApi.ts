@@ -1,5 +1,5 @@
 import { getAccessToken } from './auth'
-import type { Agendamento, Medico, StatusAgendamento } from '../data/clinicConfig'
+import type { Agendamento, Barbeiro, StatusAgendamento } from '../data/barbeariaConfig'
 
 async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getAccessToken()
@@ -27,6 +27,7 @@ export async function fetchAuthConfig() {
   if (!res.ok) throw new Error(data.error || 'Falha ao carregar config')
   return data as {
     clientId: string
+    barbeiros: string[]
     calendars: Record<string, string>
   }
 }
@@ -35,7 +36,9 @@ export type CreateAgendamentoInput = {
   nome: string
   telefone: string
   email: string
-  medico: Medico
+  barbeiro: Barbeiro
+  servico: string
+  valor: number
   data: string
   hora: string
   status?: StatusAgendamento
@@ -44,12 +47,12 @@ export type CreateAgendamentoInput = {
 export async function listAgendamentos(params: {
   timeMin: string
   timeMax: string
-  medico?: Medico | 'todos'
+  barbeiro?: Barbeiro | 'todos'
 }) {
   const qs = new URLSearchParams({
     timeMin: params.timeMin,
     timeMax: params.timeMax,
-    medico: params.medico || 'todos',
+    barbeiro: params.barbeiro || 'todos',
   })
   const data = await api<{ agendamentos: Agendamento[] }>(`calendar-list?${qs}`)
   return data.agendamentos
@@ -80,7 +83,7 @@ export async function updateAgendamento(
 export async function deleteAgendamento(input: {
   id: string
   calendarId: string
-  medico?: Medico
+  barbeiro?: Barbeiro
 }) {
   await api<{ ok: boolean }>('calendar-delete', {
     method: 'POST',

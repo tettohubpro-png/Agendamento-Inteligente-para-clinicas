@@ -2,19 +2,19 @@
 
 @theme {
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --color-ink: #0f2a2e;
-  --color-ink-muted: #4a6b70;
-  --color-surface: #f3f7f6;
-  --color-surface-2: #e7efed;
-  --color-panel: #ffffff;
-  --color-line: #d5e2e0;
-  --color-brand: #0d6e6e;
-  --color-brand-deep: #0a5252;
-  --color-brand-soft: #d8eceb;
-  --color-accent: #c47a2c;
-  --color-danger: #b42318;
-  --color-ok: #1b7a4a;
+  --font-display: "Bebas Neue", ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #f5f0e8;
+  --color-ink-muted: #a89f94;
+  --color-surface: #0d0d0d;
+  --color-surface-2: #1a1a1a;
+  --color-panel: #141414;
+  --color-line: #2a2a2a;
+  --color-brand: #c9a227;
+  --color-brand-deep: #a8861f;
+  --color-brand-soft: #2a2418;
+  --color-accent: #e8d5a3;
+  --color-danger: #e05252;
+  --color-ok: #4ade80;
 }
 
 * {
@@ -32,8 +32,8 @@ body {
   font-family: var(--font-sans);
   color: var(--color-ink);
   background:
-    radial-gradient(1200px 500px at 10% -10%, #d8eceb 0%, transparent 55%),
-    radial-gradient(900px 400px at 100% 0%, #e8f0ea 0%, transparent 50%),
+    radial-gradient(900px 400px at 10% -10%, #1f1a0f 0%, transparent 55%),
+    radial-gradient(700px 350px at 100% 0%, #1a1510 0%, transparent 50%),
     var(--color-surface);
 }
 

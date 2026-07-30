@@ -17,7 +17,7 @@ exports.handler = async (event) => {
   const params = event.queryStringParameters || {}
   const timeMin = params.timeMin
   const timeMax = params.timeMax
-  const medico = params.medico || 'todos'
+  const barbeiro = params.barbeiro || params.medico || 'todos'
 
   if (!timeMin || !timeMax) {
     return json(400, { error: 'Informe timeMin e timeMax (ISO)' })
@@ -26,21 +26,18 @@ exports.handler = async (event) => {
   try {
     const ids = calendarIds()
     const targets =
-      medico === 'todos'
-        ? [
-            { medico: 'Dr. Elizeu', calendarId: ids['Dr. Elizeu'] },
-            { medico: 'Dr. Paulo', calendarId: ids['Dr. Paulo'] },
-          ]
-        : [{ medico, calendarId: ids[medico] }]
+      barbeiro === 'todos'
+        ? Object.entries(ids).map(([nome, calendarId]) => ({ barbeiro: nome, calendarId }))
+        : [{ barbeiro, calendarId: ids[barbeiro] }]
 
     const unique = new Map()
     for (const t of targets) {
       if (!t.calendarId) continue
-      unique.set(`${t.medico}:${t.calendarId}`, t)
+      unique.set(`${t.barbeiro}:${t.calendarId}`, t)
     }
 
     const results = []
-    for (const { medico: med, calendarId } of unique.values()) {
+    for (const { barbeiro: barb, calendarId } of unique.values()) {
       const qs = new URLSearchParams({
         singleEvents: 'true',
         orderBy: 'startTime',
@@ -53,7 +50,7 @@ exports.handler = async (event) => {
         token,
       )
       for (const item of data.items || []) {
-        const mapped = eventToAgendamento(item, med, calendarId)
+        const mapped = eventToAgendamento(item, barb, calendarId)
         if (mapped) results.push(mapped)
       }
     }

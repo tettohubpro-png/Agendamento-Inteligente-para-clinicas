@@ -23,22 +23,29 @@ function getAccessToken(event) {
 }
 
 function calendarIds() {
+  if (process.env.BARBEIROS_CALENDARS) {
+    try {
+      return JSON.parse(process.env.BARBEIROS_CALENDARS)
+    } catch {
+      // fallback
+    }
+  }
   return {
-    'Dr. Elizeu':
-      process.env.CALENDAR_ELIZEU_ID ||
-      process.env.VITE_CALENDAR_ELIZEU_ID ||
-      'primary',
-    'Dr. Paulo':
-      process.env.CALENDAR_PAULO_ID ||
-      process.env.VITE_CALENDAR_PAULO_ID ||
+    Maycon:
+      process.env.CALENDAR_MAYCON_ID ||
+      process.env.VITE_CALENDAR_MAYCON_ID ||
       'primary',
   }
 }
 
-function resolveCalendarId(medico) {
+function barbeirosList() {
+  return Object.keys(calendarIds())
+}
+
+function resolveCalendarId(barbeiro) {
   const ids = calendarIds()
-  if (!medico || medico === 'todos') return null
-  return ids[medico] || null
+  if (!barbeiro || barbeiro === 'todos') return null
+  return ids[barbeiro] || null
 }
 
 function addMinutes(isoDate, hhmm, minutes) {
@@ -53,54 +60,61 @@ function addMinutes(isoDate, hhmm, minutes) {
   return { date: `${y}-${mo}-${day}`, time: `${hour}:${min}` }
 }
 
-function buildSummary({ nome, hora, medico }) {
-  return `${nome} | ${hora} | ${medico}`
+function buildSummary({ nome, hora, servico, barbeiro }) {
+  return `${nome} | ${hora} | ${servico} | ${barbeiro}`
 }
 
-function buildDescription({ telefone, email, status }) {
-  return [`Telefone: ${telefone || ''}`, `E-mail: ${email || ''}`, `Status: ${status || 'aguardando'}`].join(
-    '\n',
-  )
+function buildDescription({ telefone, email, status, servico, valor }) {
+  return [
+    `Telefone: ${telefone || ''}`,
+    `E-mail: ${email || ''}`,
+    `Serviço: ${servico || ''}`,
+    `Valor: R$ ${Number(valor || 0).toFixed(2)}`,
+    `Status: ${status || 'aguardando'}`,
+  ].join('\n')
 }
 
 function parseDescription(description = '') {
   const telefone = (description.match(/Telefone:\s*(.*)/i) || [])[1]?.trim() || ''
   const email = (description.match(/E-mail:\s*(.*)/i) || [])[1]?.trim() || ''
+  const servico = (description.match(/Serviço:\s*(.*)/i) || [])[1]?.trim() || ''
+  const valorRaw = (description.match(/Valor:\s*R\$\s*([\d.,]+)/i) || [])[1]?.trim() || '0'
+  const valor = parseFloat(valorRaw.replace(',', '.')) || 0
   const statusRaw = (description.match(/Status:\s*(.*)/i) || [])[1]?.trim().toLowerCase() || 'confirmado'
   const status = ['confirmado', 'aguardando', 'cancelado'].includes(statusRaw) ? statusRaw : 'confirmado'
-  return { telefone, email, status }
+  return { telefone, email, servico, valor, status }
 }
 
 function parseSummary(summary = '') {
   const parts = summary.split('|').map((p) => p.trim())
-  if (parts.length >= 3) {
-    return { nome: parts[0], hora: parts[1], medico: parts[2] }
+  if (parts.length >= 4) {
+    return { nome: parts[0], hora: parts[1], servico: parts[2], barbeiro: parts[3] }
   }
-  return { nome: summary || 'Paciente', hora: '', medico: '' }
+  if (parts.length >= 3) {
+    return { nome: parts[0], hora: parts[1], servico: parts[2], barbeiro: 'Maycon' }
+  }
+  return { nome: summary || 'Cliente', hora: '', servico: '', barbeiro: 'Maycon' }
 }
 
-function eventToAgendamento(event, medico, calendarId) {
+function eventToAgendamento(event, barbeiro, calendarId) {
   const start = event.start?.dateTime || event.start?.date
   if (!start) return null
   const data = start.slice(0, 10)
   const horaFromStart = start.includes('T') ? start.slice(11, 16) : ''
   const parsed = parseSummary(event.summary || '')
   const desc = parseDescription(event.description || '')
-  const medicoFinal =
-    medico ||
-    (parsed.medico.includes('Paulo') ? 'Dr. Paulo' : parsed.medico.includes('Elizeu') ? 'Dr. Elizeu' : 'Dr. Elizeu')
-  const hora = horaFromStart || parsed.hora || '08:00'
-  const telefone = desc.telefone
-  const email = desc.email
-  const nome = parsed.nome
+  const barbeiroFinal = barbeiro || parsed.barbeiro || 'Maycon'
+  const hora = horaFromStart || parsed.hora || '08:30'
   return {
     id: event.id,
     calendarId,
-    pacienteId: email || telefone || event.id,
-    pacienteNome: nome,
-    pacienteTelefone: telefone,
-    pacienteEmail: email,
-    medico: medicoFinal,
+    clienteId: desc.email || desc.telefone || event.id,
+    clienteNome: parsed.nome,
+    clienteTelefone: desc.telefone,
+    clienteEmail: desc.email,
+    barbeiro: barbeiroFinal,
+    servico: desc.servico || parsed.servico,
+    valor: desc.valor,
     data,
     hora,
     status: desc.status,
@@ -108,11 +122,11 @@ function eventToAgendamento(event, medico, calendarId) {
 }
 
 function toEventBody(payload) {
-  const { nome, telefone, email, medico, data, hora, status } = payload
+  const { nome, telefone, email, barbeiro, servico, valor, data, hora, status } = payload
   const end = addMinutes(data, hora, 30)
   return {
-    summary: buildSummary({ nome, hora, medico }),
-    description: buildDescription({ telefone, email, status: status || 'aguardando' }),
+    summary: buildSummary({ nome, hora, servico, barbeiro }),
+    description: buildDescription({ telefone, email, servico, valor, status: status || 'aguardando' }),
     start: {
       dateTime: `${data}T${hora}:00`,
       timeZone: 'America/Sao_Paulo',
@@ -124,16 +138,18 @@ function toEventBody(payload) {
   }
 }
 
-function isWeekday(isoDate) {
+function isOpenDay(isoDate) {
   const d = new Date(`${isoDate}T12:00:00`)
   const day = d.getDay()
-  return day >= 1 && day <= 5
+  return day >= 1 && day <= 6 // seg–sáb
 }
 
 function isValidSlot(hora) {
   const [h, m] = hora.split(':').map(Number)
   const total = h * 60 + m
-  return total >= 8 * 60 && total <= 17 * 60 + 30 && m % 30 === 0
+  const start = 8 * 60 + 30 // 08:30
+  const end = 18 * 60 // 18:00
+  return total >= start && total < end && m % 30 === 0
 }
 
 async function calendarFetch(path, accessToken, options = {}) {
@@ -167,10 +183,11 @@ module.exports = {
   corsPreflight,
   getAccessToken,
   calendarIds,
+  barbeirosList,
   resolveCalendarId,
   eventToAgendamento,
   toEventBody,
-  isWeekday,
+  isOpenDay,
   isValidSlot,
   calendarFetch,
   addMinutes,

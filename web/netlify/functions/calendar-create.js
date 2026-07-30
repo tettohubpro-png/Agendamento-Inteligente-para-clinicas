@@ -5,7 +5,7 @@ const {
   resolveCalendarId,
   calendarIds,
   toEventBody,
-  isWeekday,
+  isOpenDay,
   isValidSlot,
   calendarFetch,
   eventToAgendamento,
@@ -25,18 +25,18 @@ exports.handler = async (event) => {
     return json(400, { error: 'JSON inválido' })
   }
 
-  const { nome, telefone, email, medico, data, hora, status } = body
-  if (!nome || !medico || !data || !hora) {
-    return json(400, { error: 'Campos obrigatórios: nome, medico, data, hora' })
+  const { nome, telefone, email, barbeiro, medico, servico, valor, data, hora, status } = body
+  const barb = barbeiro || medico
+  if (!nome || !barb || !data || !hora || !servico) {
+    return json(400, { error: 'Campos obrigatórios: nome, barbeiro, servico, data, hora' })
   }
-  if (!isWeekday(data)) return json(400, { error: 'Agende apenas de segunda a sexta' })
-  if (!isValidSlot(hora)) return json(400, { error: 'Horário inválido (08:00–18:00, slots de 30 min)' })
+  if (!isOpenDay(data)) return json(400, { error: 'Agende apenas de segunda a sábado' })
+  if (!isValidSlot(hora)) return json(400, { error: 'Horário inválido (08:30–18:00, slots de 30 min)' })
 
-  const calendarId = resolveCalendarId(medico)
-  if (!calendarId) return json(400, { error: 'Médico/calendário inválido' })
+  const calendarId = resolveCalendarId(barb)
+  if (!calendarId) return json(400, { error: 'Barbeiro/calendário inválido' })
 
   try {
-    const startIso = `${data}T${hora}:00-03:00`
     const endDate = new Date(`${data}T${hora}:00`)
     endDate.setMinutes(endDate.getMinutes() + 30)
     const endIso = endDate.toISOString()
@@ -56,7 +56,7 @@ exports.handler = async (event) => {
       return s.slice(11, 16) === hora
     })
     if (conflict) {
-      return json(409, { error: 'Já existe consulta neste horário para este médico' })
+      return json(409, { error: 'Já existe agendamento neste horário para este barbeiro' })
     }
 
     if (telefone || email) {
@@ -82,7 +82,7 @@ exports.handler = async (event) => {
         })
         if (active) {
           return json(409, {
-            error: 'Este paciente já possui um agendamento ativo. Cancele o anterior primeiro.',
+            error: 'Este cliente já possui um agendamento ativo. Cancele o anterior primeiro.',
           })
         }
       }
@@ -91,12 +91,22 @@ exports.handler = async (event) => {
     const created = await calendarFetch(`/calendars/${encodeURIComponent(calendarId)}/events`, token, {
       method: 'POST',
       body: JSON.stringify(
-        toEventBody({ nome, telefone, email, medico, data, hora, status: status || 'aguardando' }),
+        toEventBody({
+          nome,
+          telefone,
+          email,
+          barbeiro: barb,
+          servico,
+          valor: valor || 0,
+          data,
+          hora,
+          status: status || 'aguardando',
+        }),
       ),
     })
 
     return json(201, {
-      agendamento: eventToAgendamento(created, medico, calendarId),
+      agendamento: eventToAgendamento(created, barb, calendarId),
     })
   } catch (err) {
     return json(err.status || 500, { error: err.message || 'Falha ao criar evento' })

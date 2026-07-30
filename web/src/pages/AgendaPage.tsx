@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { useClinic } from '../context/ClinicContext'
-import { HORARIOS, MEDICOS, type Medico } from '../data/clinicConfig'
+import { useBarbearia } from '../context/BarbeariaContext'
+import { BARBEIROS, HORARIOS, type Barbeiro } from '../data/barbeariaConfig'
 import { StatusBadge } from './DashboardPage'
 
 function startOfWeek(d = new Date()) {
@@ -22,36 +22,36 @@ function addDays(d: Date, n: number) {
   return x
 }
 
-const diasLabel = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex']
+const diasLabel = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 export function AgendaPage() {
-  const { agendamentos } = useClinic()
-  const [medico, setMedico] = useState<Medico | 'todos'>('todos')
+  const { agendamentos } = useBarbearia()
+  const [barbeiro, setBarbeiro] = useState<Barbeiro | 'todos'>('todos')
   const weekStart = useMemo(() => startOfWeek(), [])
-  const dias = useMemo(() => Array.from({ length: 5 }, (_, i) => addDays(weekStart, i)), [weekStart])
+  const dias = useMemo(() => Array.from({ length: 6 }, (_, i) => addDays(weekStart, i)), [weekStart])
 
   const filtrados = agendamentos.filter(
-    (a) => a.status !== 'cancelado' && (medico === 'todos' || a.medico === medico),
+    (a) => a.status !== 'cancelado' && (barbeiro === 'todos' || a.barbeiro === barbeiro),
   )
 
   return (
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl text-ink">Agenda</h1>
-          <p className="mt-1 text-ink-muted">Google Calendar · slots de 30 min (08:00–18:00)</p>
+          <h1 className="font-display text-3xl tracking-wide text-ink">Agenda</h1>
+          <p className="mt-1 text-ink-muted">Seg–Sáb · 08:30–18:00 · slots de 30 min</p>
         </div>
         <label className="text-sm">
-          <span className="mb-1 block text-ink-muted">Médico</span>
+          <span className="mb-1 block text-ink-muted">Barbeiro</span>
           <select
-            className="rounded-xl border border-line bg-panel px-3 py-2 outline-none ring-brand/30 focus:ring-2"
-            value={medico}
-            onChange={(e) => setMedico(e.target.value as Medico | 'todos')}
+            className="rounded-xl border border-line bg-panel px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
+            value={barbeiro}
+            onChange={(e) => setBarbeiro(e.target.value as Barbeiro | 'todos')}
           >
             <option value="todos">Todos</option>
-            {MEDICOS.map((m) => (
-              <option key={m.nome} value={m.nome}>
-                {m.nome} — {m.especialidade}
+            {BARBEIROS.map((b) => (
+              <option key={b.nome} value={b.nome}>
+                {b.nome}
               </option>
             ))}
           </select>
@@ -59,7 +59,7 @@ export function AgendaPage() {
       </div>
 
       <div className="mt-8 overflow-x-auto rounded-2xl border border-line bg-panel">
-        <table className="min-w-[720px] w-full border-collapse text-sm">
+        <table className="min-w-[800px] w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-line bg-surface-2/60">
               <th className="px-3 py-3 text-left font-medium text-ink-muted">Horário</th>
@@ -86,11 +86,11 @@ export function AgendaPage() {
                         <span className="text-xs text-line">—</span>
                       ) : (
                         slot.map((a) => (
-                          <div key={a.id} className="mb-1 rounded-lg bg-brand-soft/70 px-2 py-1.5">
-                            <p className="font-medium leading-tight">
-                              {a.pacienteNome.split(' ')[0]}
+                          <div key={a.id} className="mb-1 rounded-lg bg-brand-soft/80 px-2 py-1.5">
+                            <p className="font-medium leading-tight text-ink">
+                              {a.clienteNome.split(' ')[0]}
                             </p>
-                            <p className="text-[11px] text-ink-muted">{a.medico}</p>
+                            <p className="text-[11px] text-ink-muted">{a.servico}</p>
                             <div className="mt-1">
                               <StatusBadge status={a.status} />
                             </div>

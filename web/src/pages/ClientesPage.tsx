@@ -1,8 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { useClinic } from '../context/ClinicContext'
+import { useBarbearia } from '../context/BarbeariaContext'
 
-export function PacientesPage() {
-  const { pacientes, addPaciente } = useClinic()
+export function ClientesPage() {
+  const { clientes, addCliente } = useBarbearia()
   const [q, setQ] = useState('')
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
@@ -10,19 +10,19 @@ export function PacientesPage() {
 
   const filtrados = useMemo(() => {
     const term = q.trim().toLowerCase()
-    if (!term) return pacientes
-    return pacientes.filter(
-      (p) =>
-        p.nome.toLowerCase().includes(term) ||
-        p.telefone.includes(term) ||
-        p.email.toLowerCase().includes(term),
+    if (!term) return clientes
+    return clientes.filter(
+      (c) =>
+        c.nome.toLowerCase().includes(term) ||
+        c.telefone.includes(term) ||
+        c.email.toLowerCase().includes(term),
     )
-  }, [pacientes, q])
+  }, [clientes, q])
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!nome.trim() || !telefone.trim() || !email.trim()) return
-    addPaciente({ nome: nome.trim(), telefone: telefone.trim(), email: email.trim() })
+    if (!nome.trim() || !telefone.trim()) return
+    addCliente({ nome: nome.trim(), telefone: telefone.trim(), email: email.trim() })
     setNome('')
     setTelefone('')
     setEmail('')
@@ -30,16 +30,15 @@ export function PacientesPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <h1 className="font-display text-3xl text-ink">Pacientes</h1>
+      <h1 className="font-display text-3xl tracking-wide text-ink">Clientes</h1>
       <p className="mt-1 text-ink-muted">
-        Derivados dos eventos do Google Calendar. Cadastro rápido fica disponível para o próximo
-        agendamento.
+        Derivados dos agendamentos no Google Calendar.
       </p>
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_320px]">
         <div>
           <input
-            className="w-full rounded-xl border border-line bg-panel px-3 py-2.5 outline-none ring-brand/30 focus:ring-2"
+            className="w-full rounded-xl border border-line bg-panel px-3 py-2.5 text-ink outline-none ring-brand/30 focus:ring-2"
             placeholder="Buscar por nome, telefone ou e-mail"
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -57,15 +56,15 @@ export function PacientesPage() {
                 {filtrados.length === 0 && (
                   <tr>
                     <td colSpan={3} className="px-4 py-6 text-ink-muted">
-                      Nenhum paciente encontrado nos eventos.
+                      Nenhum cliente encontrado.
                     </td>
                   </tr>
                 )}
-                {filtrados.map((p) => (
-                  <tr key={p.id} className="border-b border-line/70">
-                    <td className="px-4 py-3 font-medium">{p.nome}</td>
-                    <td className="px-4 py-3 text-ink-muted">{p.telefone}</td>
-                    <td className="px-4 py-3 text-ink-muted">{p.email}</td>
+                {filtrados.map((c) => (
+                  <tr key={c.id} className="border-b border-line/70">
+                    <td className="px-4 py-3 font-medium">{c.nome}</td>
+                    <td className="px-4 py-3 text-ink-muted">{c.telefone}</td>
+                    <td className="px-4 py-3 text-ink-muted">{c.email || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -74,13 +73,13 @@ export function PacientesPage() {
         </div>
 
         <form onSubmit={onSubmit} className="space-y-3 rounded-2xl border border-line bg-panel p-5">
-          <h2 className="font-display text-xl">Novo paciente</h2>
+          <h2 className="font-display text-xl tracking-wide">Novo cliente</h2>
           <Field label="Nome" value={nome} onChange={setNome} />
           <Field label="Telefone" value={telefone} onChange={setTelefone} />
-          <Field label="E-mail" value={email} onChange={setEmail} type="email" />
+          <Field label="E-mail (opcional)" value={email} onChange={setEmail} type="email" />
           <button
             type="submit"
-            className="w-full rounded-xl bg-brand px-4 py-2.5 font-medium text-white hover:bg-brand-deep"
+            className="w-full rounded-xl bg-brand px-4 py-2.5 font-medium text-surface hover:bg-brand-deep"
           >
             Cadastrar
           </button>
@@ -106,7 +105,7 @@ function Field({
       <span className="mb-1 block font-medium">{label}</span>
       <input
         type={type}
-        className="w-full rounded-xl border border-line bg-surface px-3 py-2 outline-none ring-brand/30 focus:ring-2"
+        className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />

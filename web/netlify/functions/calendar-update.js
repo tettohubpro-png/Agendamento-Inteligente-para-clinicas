@@ -4,7 +4,7 @@ const {
   getAccessToken,
   resolveCalendarId,
   toEventBody,
-  isWeekday,
+  isOpenDay,
   isValidSlot,
   calendarFetch,
   eventToAgendamento,
@@ -26,13 +26,27 @@ exports.handler = async (event) => {
     return json(400, { error: 'JSON inválido' })
   }
 
-  const { id, calendarId: bodyCalendarId, nome, telefone, email, medico, data, hora, status } = body
+  const {
+    id,
+    calendarId: bodyCalendarId,
+    nome,
+    telefone,
+    email,
+    barbeiro,
+    medico,
+    servico,
+    valor,
+    data,
+    hora,
+    status,
+  } = body
+  const barb = barbeiro || medico
   if (!id) return json(400, { error: 'id do evento é obrigatório' })
 
-  const calendarId = bodyCalendarId || resolveCalendarId(medico)
-  if (!calendarId) return json(400, { error: 'calendarId ou medico é obrigatório' })
+  const calendarId = bodyCalendarId || resolveCalendarId(barb)
+  if (!calendarId) return json(400, { error: 'calendarId ou barbeiro é obrigatório' })
 
-  if (data && !isWeekday(data)) return json(400, { error: 'Agende apenas de segunda a sexta' })
+  if (data && !isOpenDay(data)) return json(400, { error: 'Agende apenas de segunda a sábado' })
   if (hora && !isValidSlot(hora)) return json(400, { error: 'Horário inválido' })
 
   try {
@@ -41,12 +55,14 @@ exports.handler = async (event) => {
       token,
     )
 
-    const mapped = eventToAgendamento(current, medico, calendarId)
+    const mapped = eventToAgendamento(current, barb, calendarId)
     const next = {
-      nome: nome || mapped?.pacienteNome,
-      telefone: telefone ?? mapped?.pacienteTelefone,
-      email: email ?? mapped?.pacienteEmail,
-      medico: medico || mapped?.medico,
+      nome: nome || mapped?.clienteNome,
+      telefone: telefone ?? mapped?.clienteTelefone,
+      email: email ?? mapped?.clienteEmail,
+      barbeiro: barb || mapped?.barbeiro,
+      servico: servico || mapped?.servico,
+      valor: valor ?? mapped?.valor,
       data: data || mapped?.data,
       hora: hora || mapped?.hora,
       status: status || mapped?.status || 'aguardando',
@@ -62,7 +78,7 @@ exports.handler = async (event) => {
     )
 
     return json(200, {
-      agendamento: eventToAgendamento(updated, next.medico, calendarId),
+      agendamento: eventToAgendamento(updated, next.barbeiro, calendarId),
     })
   } catch (err) {
     return json(err.status || 500, { error: err.message || 'Falha ao atualizar evento' })

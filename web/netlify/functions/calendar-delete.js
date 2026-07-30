@@ -26,11 +26,11 @@ exports.handler = async (event) => {
 
   const params = event.queryStringParameters || {}
   const id = body.id || params.id
-  const medico = body.medico || params.medico
-  const calendarId = body.calendarId || params.calendarId || resolveCalendarId(medico)
+  const barbeiro = body.barbeiro || body.medico || params.barbeiro || params.medico
+  const calendarId = body.calendarId || params.calendarId || resolveCalendarId(barbeiro)
 
   if (!id) return json(400, { error: 'id do evento é obrigatório' })
-  if (!calendarId) return json(400, { error: 'calendarId ou medico é obrigatório' })
+  if (!calendarId) return json(400, { error: 'calendarId ou barbeiro é obrigatório' })
 
   try {
     await calendarFetch(

@@ -1,33 +1,41 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { useClinic, type Medico } from '../context/ClinicContext'
-import { HORARIOS, MEDICOS } from '../data/clinicConfig'
+import { useBarbearia, type Barbeiro } from '../context/BarbeariaContext'
+import {
+  BARBEIROS,
+  HORARIOS,
+  SERVICOS,
+  servicoPorId,
+} from '../data/barbeariaConfig'
 import { StatusBadge } from './DashboardPage'
 
 export function AgendamentosPage() {
-  const { agendamentos, pacientes, addAgendamento, updateAgendamentoStatus, cancelAgendamento } =
-    useClinic()
-  const [pacienteId, setPacienteId] = useState('')
+  const { agendamentos, clientes, addAgendamento, updateAgendamentoStatus, cancelAgendamento } =
+    useBarbearia()
+  const [clienteId, setClienteId] = useState('')
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
   const [email, setEmail] = useState('')
-  const [medico, setMedico] = useState<Medico>('Dr. Elizeu')
+  const [barbeiro, setBarbeiro] = useState<Barbeiro>('Maycon')
+  const [servicoId, setServicoId] = useState(SERVICOS[0].id)
   const [data, setData] = useState(new Date().toISOString().slice(0, 10))
   const [hora, setHora] = useState('09:00')
   const [erro, setErro] = useState('')
   const [saving, setSaving] = useState(false)
 
+  const servico = servicoPorId(servicoId)
+
   const selected = useMemo(
-    () => pacientes.find((p) => p.id === pacienteId),
-    [pacientes, pacienteId],
+    () => clientes.find((c) => c.id === clienteId),
+    [clientes, clienteId],
   )
 
-  function onSelectPaciente(id: string) {
-    setPacienteId(id)
-    const p = pacientes.find((x) => x.id === id)
-    if (p) {
-      setNome(p.nome)
-      setTelefone(p.telefone)
-      setEmail(p.email)
+  function onSelectCliente(id: string) {
+    setClienteId(id)
+    const c = clientes.find((x) => x.id === id)
+    if (c) {
+      setNome(c.nome)
+      setTelefone(c.telefone)
+      setEmail(c.email)
     }
   }
 
@@ -35,7 +43,11 @@ export function AgendamentosPage() {
     e.preventDefault()
     setErro('')
     if (!nome.trim()) {
-      setErro('Informe o nome do paciente.')
+      setErro('Informe o nome do cliente.')
+      return
+    }
+    if (!servico) {
+      setErro('Selecione um serviço.')
       return
     }
     setSaving(true)
@@ -44,7 +56,9 @@ export function AgendamentosPage() {
         nome: nome.trim(),
         telefone: telefone.trim(),
         email: email.trim(),
-        medico,
+        barbeiro,
+        servico: servico.nome,
+        valor: servico.preco,
         data,
         hora,
         status: 'aguardando',
@@ -52,7 +66,7 @@ export function AgendamentosPage() {
       setNome('')
       setTelefone('')
       setEmail('')
-      setPacienteId('')
+      setClienteId('')
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Falha ao agendar')
     } finally {
@@ -66,16 +80,17 @@ export function AgendamentosPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <h1 className="font-display text-3xl text-ink">Agendamentos</h1>
+      <h1 className="font-display text-3xl tracking-wide text-ink">Agendamentos</h1>
       <p className="mt-1 text-ink-muted">Criar, confirmar ou cancelar no Google Calendar.</p>
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_320px]">
+      <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_340px]">
         <div className="overflow-x-auto rounded-2xl border border-line bg-panel">
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table className="w-full min-w-[700px] text-left text-sm">
             <thead className="border-b border-line bg-surface-2/60">
               <tr>
-                <th className="px-4 py-3 font-medium">Paciente</th>
-                <th className="px-4 py-3 font-medium">Médico</th>
+                <th className="px-4 py-3 font-medium">Cliente</th>
+                <th className="px-4 py-3 font-medium">Serviço</th>
+                <th className="px-4 py-3 font-medium">Barbeiro</th>
                 <th className="px-4 py-3 font-medium">Data</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Ações</th>
@@ -84,15 +99,19 @@ export function AgendamentosPage() {
             <tbody>
               {ordenados.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-ink-muted">
-                    Nenhum evento encontrado nas agendas configuradas.
+                  <td colSpan={6} className="px-4 py-6 text-ink-muted">
+                    Nenhum agendamento encontrado.
                   </td>
                 </tr>
               )}
               {ordenados.map((a) => (
                 <tr key={a.id} className="border-b border-line/70">
-                  <td className="px-4 py-3 font-medium">{a.pacienteNome}</td>
-                  <td className="px-4 py-3 text-ink-muted">{a.medico}</td>
+                  <td className="px-4 py-3 font-medium">{a.clienteNome}</td>
+                  <td className="px-4 py-3 text-ink-muted">
+                    {a.servico}
+                    <span className="ml-1 text-brand">R$ {a.valor.toFixed(2)}</span>
+                  </td>
+                  <td className="px-4 py-3 text-ink-muted">{a.barbeiro}</td>
                   <td className="px-4 py-3 text-ink-muted">
                     {a.data} · {a.hora}
                   </td>
@@ -121,19 +140,19 @@ export function AgendamentosPage() {
         </div>
 
         <form onSubmit={onSubmit} className="space-y-3 rounded-2xl border border-line bg-panel p-5">
-          <h2 className="font-display text-xl">Novo agendamento</h2>
-          {pacientes.length > 0 && (
+          <h2 className="font-display text-xl tracking-wide">Novo agendamento</h2>
+          {clientes.length > 0 && (
             <label className="block text-sm">
-              <span className="mb-1 block font-medium">Paciente existente</span>
+              <span className="mb-1 block font-medium">Cliente existente</span>
               <select
-                className="w-full rounded-xl border border-line bg-surface px-3 py-2 outline-none ring-brand/30 focus:ring-2"
-                value={pacienteId}
-                onChange={(e) => onSelectPaciente(e.target.value)}
+                className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
+                value={clienteId}
+                onChange={(e) => onSelectCliente(e.target.value)}
               >
                 <option value="">— Novo / manual —</option>
-                {pacientes.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nome}
+                {clientes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
                   </option>
                 ))}
               </select>
@@ -141,17 +160,40 @@ export function AgendamentosPage() {
           )}
           <Field label="Nome" value={nome} onChange={setNome} />
           <Field label="Telefone" value={telefone} onChange={setTelefone} />
-          <Field label="E-mail" value={email} onChange={setEmail} type="email" />
+          <Field label="E-mail (opcional)" value={email} onChange={setEmail} type="email" />
           <label className="block text-sm">
-            <span className="mb-1 block font-medium">Médico</span>
+            <span className="mb-1 block font-medium">Serviço</span>
             <select
-              className="w-full rounded-xl border border-line bg-surface px-3 py-2 outline-none ring-brand/30 focus:ring-2"
-              value={medico}
-              onChange={(e) => setMedico(e.target.value as Medico)}
+              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
+              value={servicoId}
+              onChange={(e) => setServicoId(e.target.value)}
             >
-              {MEDICOS.map((m) => (
-                <option key={m.nome} value={m.nome}>
-                  {m.nome}
+              <optgroup label="Combos">
+                {SERVICOS.filter((s) => s.tipo === 'combo').map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nome} — R$ {s.preco.toFixed(2)}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Avulsos">
+                {SERVICOS.filter((s) => s.tipo === 'avulso').map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nome} — R$ {s.preco.toFixed(2)}
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium">Barbeiro</span>
+            <select
+              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
+              value={barbeiro}
+              onChange={(e) => setBarbeiro(e.target.value as Barbeiro)}
+            >
+              {BARBEIROS.map((b) => (
+                <option key={b.nome} value={b.nome}>
+                  {b.nome}
                 </option>
               ))}
             </select>
@@ -160,7 +202,7 @@ export function AgendamentosPage() {
             <span className="mb-1 block font-medium">Data</span>
             <input
               type="date"
-              className="w-full rounded-xl border border-line bg-surface px-3 py-2 outline-none ring-brand/30 focus:ring-2"
+              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
               value={data}
               onChange={(e) => setData(e.target.value)}
             />
@@ -168,7 +210,7 @@ export function AgendamentosPage() {
           <label className="block text-sm">
             <span className="mb-1 block font-medium">Horário</span>
             <select
-              className="w-full rounded-xl border border-line bg-surface px-3 py-2 outline-none ring-brand/30 focus:ring-2"
+              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
               value={hora}
               onChange={(e) => setHora(e.target.value)}
             >
@@ -179,6 +221,11 @@ export function AgendamentosPage() {
               ))}
             </select>
           </label>
+          {servico && (
+            <p className="text-sm text-brand">
+              Total: R$ {servico.preco.toFixed(2)}
+            </p>
+          )}
           {selected && (
             <p className="text-xs text-ink-muted">Usando dados de {selected.nome}.</p>
           )}
@@ -186,7 +233,7 @@ export function AgendamentosPage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-xl bg-brand px-4 py-2.5 font-medium text-white hover:bg-brand-deep disabled:opacity-60"
+            className="w-full rounded-xl bg-brand px-4 py-2.5 font-medium text-surface hover:bg-brand-deep disabled:opacity-60"
           >
             {saving ? 'Agendando…' : 'Agendar'}
           </button>
@@ -212,7 +259,7 @@ function Field({
       <span className="mb-1 block font-medium">{label}</span>
       <input
         type={type}
-        className="w-full rounded-xl border border-line bg-surface px-3 py-2 outline-none ring-brand/30 focus:ring-2"
+        className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
@@ -233,7 +280,7 @@ function Action({
     <button
       type="button"
       onClick={onClick}
-      className={`text-xs font-medium underline-offset-2 hover:underline ${danger ? 'text-danger' : 'text-brand-deep'}`}
+      className={`text-xs font-medium underline-offset-2 hover:underline ${danger ? 'text-danger' : 'text-brand'}`}
     >
       {label}
     </button>

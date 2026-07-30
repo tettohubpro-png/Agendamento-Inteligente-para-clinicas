@@ -31,7 +31,7 @@ export function GoogleAuthShell({ children }: { children: ReactNode }) {
   if (!clientId) {
     return (
       <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-4">
-        <p className="font-display text-3xl text-brand-deep">FluxionAI</p>
+        <p className="font-display text-4xl tracking-widest text-brand">BOMCORTE</p>
         <p className="mt-3 text-ink-muted">
           Configure <code className="text-ink">VITE_GOOGLE_CLIENT_ID</code> no{' '}
           <code className="text-ink">.env.local</code> ou nas variáveis da Netlify.

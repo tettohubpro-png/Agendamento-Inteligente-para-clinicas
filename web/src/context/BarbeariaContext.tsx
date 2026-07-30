@@ -8,14 +8,14 @@ import {
   type ReactNode,
 } from 'react'
 import {
-  clinicaConfig,
-  pacientesFromAgendamentos,
+  barbeariaConfig,
+  clientesFromAgendamentos,
   type Agendamento,
-  type ClinicaConfig,
-  type Medico,
-  type Paciente,
+  type BarbeariaConfig,
+  type Barbeiro,
+  type Cliente,
   type StatusAgendamento,
-} from '../data/clinicConfig'
+} from '../data/barbeariaConfig'
 import {
   createAgendamento,
   deleteAgendamento,
@@ -24,21 +24,21 @@ import {
   type CreateAgendamentoInput,
 } from '../lib/calendarApi'
 
-type ClinicContextValue = {
-  pacientes: Paciente[]
+type BarbeariaContextValue = {
+  clientes: Cliente[]
   agendamentos: Agendamento[]
-  clinica: ClinicaConfig
+  barbearia: BarbeariaConfig
   loading: boolean
   error: string
   refresh: () => Promise<void>
-  addPaciente: (p: Omit<Paciente, 'id'>) => void
+  addCliente: (c: Omit<Cliente, 'id'>) => void
   addAgendamento: (a: CreateAgendamentoInput) => Promise<void>
   updateAgendamentoStatus: (agendamento: Agendamento, status: StatusAgendamento) => Promise<void>
   cancelAgendamento: (agendamento: Agendamento) => Promise<void>
-  updateClinica: (data: Partial<ClinicaConfig>) => void
+  updateBarbearia: (data: Partial<BarbeariaConfig>) => void
 }
 
-const ClinicContext = createContext<ClinicContextValue | null>(null)
+const BarbeariaContext = createContext<BarbeariaContextValue | null>(null)
 
 function rangeWindow() {
   const start = new Date()
@@ -50,10 +50,10 @@ function rangeWindow() {
   return { timeMin: start.toISOString(), timeMax: end.toISOString() }
 }
 
-export function ClinicProvider({ children }: { children: ReactNode }) {
+export function BarbeariaProvider({ children }: { children: ReactNode }) {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([])
-  const [extraPacientes, setExtraPacientes] = useState<Paciente[]>([])
-  const [clinica, setClinica] = useState(clinicaConfig)
+  const [extraClientes, setExtraClientes] = useState<Cliente[]>([])
+  const [barbearia, setBarbearia] = useState(barbeariaConfig)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -62,7 +62,7 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
     setError('')
     try {
       const { timeMin, timeMax } = rangeWindow()
-      const items = await listAgendamentos({ timeMin, timeMax, medico: 'todos' })
+      const items = await listAgendamentos({ timeMin, timeMax, barbeiro: 'todos' })
       setAgendamentos(items)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao carregar agenda')
@@ -75,28 +75,28 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
     void refresh()
   }, [refresh])
 
-  const pacientes = useMemo(() => {
-    const fromEvents = pacientesFromAgendamentos(agendamentos)
-    const map = new Map(fromEvents.map((p) => [p.id, p]))
-    for (const p of extraPacientes) {
-      if (!map.has(p.id)) map.set(p.id, p)
+  const clientes = useMemo(() => {
+    const fromEvents = clientesFromAgendamentos(agendamentos)
+    const map = new Map(fromEvents.map((c) => [c.id, c]))
+    for (const c of extraClientes) {
+      if (!map.has(c.id)) map.set(c.id, c)
     }
     return [...map.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-  }, [agendamentos, extraPacientes])
+  }, [agendamentos, extraClientes])
 
-  const value = useMemo<ClinicContextValue>(
+  const value = useMemo<BarbeariaContextValue>(
     () => ({
-      pacientes,
+      clientes,
       agendamentos,
-      clinica,
+      barbearia,
       loading,
       error,
       refresh,
-      addPaciente: (p) => {
-        const id = p.email || p.telefone || `p${Date.now()}`
-        setExtraPacientes((prev) => {
-          if (prev.some((x) => x.id === id || x.email === p.email)) return prev
-          return [...prev, { ...p, id }]
+      addCliente: (c) => {
+        const id = c.email || c.telefone || `c${Date.now()}`
+        setExtraClientes((prev) => {
+          if (prev.some((x) => x.id === id || x.email === c.email)) return prev
+          return [...prev, { ...c, id }]
         })
       },
       addAgendamento: async (input) => {
@@ -107,10 +107,12 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
         await updateAgendamento({
           id: agendamento.id,
           calendarId: agendamento.calendarId,
-          nome: agendamento.pacienteNome,
-          telefone: agendamento.pacienteTelefone,
-          email: agendamento.pacienteEmail,
-          medico: agendamento.medico,
+          nome: agendamento.clienteNome,
+          telefone: agendamento.clienteTelefone,
+          email: agendamento.clienteEmail,
+          barbeiro: agendamento.barbeiro,
+          servico: agendamento.servico,
+          valor: agendamento.valor,
           data: agendamento.data,
           hora: agendamento.hora,
           status,
@@ -121,22 +123,22 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
         await deleteAgendamento({
           id: agendamento.id,
           calendarId: agendamento.calendarId,
-          medico: agendamento.medico,
+          barbeiro: agendamento.barbeiro,
         })
         await refresh()
       },
-      updateClinica: (data) => setClinica((prev) => ({ ...prev, ...data })),
+      updateBarbearia: (data) => setBarbearia((prev) => ({ ...prev, ...data })),
     }),
-    [pacientes, agendamentos, clinica, loading, error, refresh],
+    [clientes, agendamentos, barbearia, loading, error, refresh],
   )
 
-  return <ClinicContext.Provider value={value}>{children}</ClinicContext.Provider>
+  return <BarbeariaContext.Provider value={value}>{children}</BarbeariaContext.Provider>
 }
 
-export function useClinic() {
-  const ctx = useContext(ClinicContext)
-  if (!ctx) throw new Error('useClinic deve ser usado dentro de ClinicProvider')
+export function useBarbearia() {
+  const ctx = useContext(BarbeariaContext)
+  if (!ctx) throw new Error('useBarbearia deve ser usado dentro de BarbeariaProvider')
   return ctx
 }
 
-export type { Medico, StatusAgendamento, Agendamento }
+export type { Barbeiro, StatusAgendamento, Agendamento }

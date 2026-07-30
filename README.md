@@ -1,48 +1,29 @@
-# Agendamento Inteligente para Clínicas
+# BOMCORTE — Barbearia
 
-Sistema de atendimento e agendamento por WhatsApp com agente de IA (**FluxionAI**), painel web e **Google Calendar** como fonte da verdade.
+Ecossistema de agendamento inteligente para a barbearia **BOMCORTE** (São Luís — MA).
+
+## Canais
+
+| Quem | Onde |
+|------|------|
+| **Cliente** | WhatsApp (98) 99233-1897 — agente n8n |
+| **Barbeiro / equipe** | Painel web (Google login) |
 
 ## Estrutura
 
 ```
-├── n8n/workflows/          # Agente WhatsApp (n8n)
-├── web/                    # Painel React + Netlify Functions
-│   ├── netlify/functions/  # Proxy autenticado da Calendar API
-│   ├── src/                # Front (Dashboard, Agenda, etc.)
-│   └── netlify.toml
+├── n8n/workflows/          # Agente WhatsApp
+├── web/                    # Painel BOMCORTE + Netlify Functions
 └── README.md
 ```
 
-## Painel web + Google Calendar
+## Painel web
 
-### 1. Google Cloud
+- **Produção:** https://fluxionai-clinic-hub.netlify.app (renomear para bomcorte na Netlify)
+- Login com **Google** (cada barbeiro usa seu Gmail)
+- Barbeiro atual: **Maycon**
 
-1. Crie um projeto em [Google Cloud Console](https://console.cloud.google.com/)
-2. Ative a **Google Calendar API**
-3. Em **APIs e serviços → Tela de consentimento OAuth**, configure o app
-4. Em **Credenciais**, crie um **ID do cliente OAuth** (Aplicativo da Web)
-5. Origins autorizados:
-   - `http://localhost:5173`
-   - `http://localhost:8888`
-   - `https://SEU-SITE.netlify.app`
-6. Escopos necessários: `openid`, `email`, `profile`, `https://www.googleapis.com/auth/calendar`
-
-### 2. Variáveis de ambiente
-
-```bash
-cd web
-cp .env.example .env.local
-```
-
-Preencha:
-
-| Variável | Uso |
-|----------|-----|
-| `VITE_GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_ID` | OAuth Web Client |
-| `VITE_CALENDAR_ELIZEU_ID` / `CALENDAR_ELIZEU_ID` | Agenda do Dr. Elizeu (e-mail ou ID, ou `primary`) |
-| `VITE_CALENDAR_PAULO_ID` / `CALENDAR_PAULO_ID` | Agenda do Dr. Paulo |
-
-### 3. Rodar local (com Functions)
+### Rodar local
 
 ```bash
 cd web
@@ -50,39 +31,37 @@ npm install
 npx netlify dev
 ```
 
-Abre em `http://localhost:8888`. Login com **Entrar com Google**.
+## Serviços e preços
 
-Só o Vite (`npm run dev`) sobe o front; as rotas `/api/*` precisam do `netlify dev` (ou do proxy apontando para a porta 8888).
+### Combos
+- **Combo Essencial** — Corte + Barba + Lavagem — R$ 70
+- **Combo Black** — Corte + Barba + Lavagem + Sobrancelha — R$ 85
+- **Combo Premium** — Corte + Barba + Lavagem + Sobrancelha + Máscara facial — R$ 110
 
-### 4. Deploy Netlify
+### Avulsos
+Corte R$ 40 · Barba R$ 40 · Barba pigmentada R$ 55 · Sobrancelhas R$ 15 · Pezinho R$ 15 · Botox capilar R$ 95 · Selagem R$ 110
 
-1. Conecte o repositório no Netlify
-2. **Base directory:** `web`
-3. **Build command:** `npm run build`
-4. **Publish directory:** `dist`
-5. Em **Environment variables**, configure as mesmas chaves do `.env.example`
-6. Redeploy
+## Horário
 
-O `netlify.toml` já define redirects SPA e `/api/*` → Functions.
+Segunda a sábado, **08:30 às 18:00** (slots de 30 min).
 
-## Formato dos eventos
+## WhatsApp do cliente
 
-- **Summary:** `Nome | HH:mm | Médico`
-- **Description:** `Telefone` / `E-mail` / `Status`
-- **Duração:** 30 minutos (`America/Sao_Paulo`)
-- **Cancelar:** remove o evento da agenda
+https://wa.me/5598992331897?text=Olá!%20Quero%20agendar%20um%20horário%20na%20BOMCORTE
 
-## Workflows n8n (WhatsApp)
+## Google Cloud
 
-Importe `n8n/workflows/`:
+1. OAuth Client ID (Web) com origins da Netlify e `http://localhost:8888`
+2. Escopos: `openid`, `email`, `profile`, `calendar`
+3. Usuários de teste: e-mails dos barbeiros
 
-1. `AgendamentoAutomatico.json`
-2. `MCP-GoogleCalendar.json`
+## Variáveis Netlify
 
-Podem usar as **mesmas agendas** Google do painel.
+- `VITE_GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_ID`
+- `CALENDAR_MAYCON_ID=primary`
+- Para mais barbeiros: `BARBEIROS_CALENDARS={"Maycon":"primary","Nome":"calendar-id"}`
 
-## Regras de negócio
+## Workflows n8n
 
-- Seg–sex, 08:00–18:00, slots de 30 min
-- Dr. Elizeu (urologista) e Dr. Paulo (oncologista)
-- Sem conflito de horário; um agendamento ativo por paciente
+1. `AgendamentoAutomatico.json` — WhatsApp → agente BOMCORTE
+2. `MCP-GoogleCalendar.json` — tools de calendário
