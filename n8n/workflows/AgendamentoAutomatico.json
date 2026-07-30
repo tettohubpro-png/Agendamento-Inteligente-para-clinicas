@@ -1,0 +1,1287 @@
+{
+  "name": "AgendamentoAutomatico",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5c59205e-9ee4-4baf-b198-848cdf5db9dc",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        0
+      ],
+      "id": "02ba28ea-31d6-44be-a2ca-85ad3e6ecabe",
+      "name": "Webhook",
+      "webhookId": "5c59205e-9ee4-4baf-b198-848cdf5db9dc"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "169f2e93-b74a-4175-8b14-362efd55a41d",
+              "name": "Nome",
+              "value": "={{ $json.body.data.pushName }}",
+              "type": "string"
+            },
+            {
+              "id": "95d16caa-2773-46cf-9e32-be5056851e2b",
+              "name": "Telefone",
+              "value": "={{ $json.body.data.key.remoteJid.replaceAll(\"@s.whatsapp.net\",\"\") }}",
+              "type": "string"
+            },
+            {
+              "id": "de361600-b0de-4d6e-bbe3-e3d3269cf1fa",
+              "name": "TipoMensagem",
+              "value": "={{ $json.body.data.messageType }}",
+              "type": "string"
+            },
+            {
+              "id": "5414e3fe-2765-4c79-8e82-dae593c59261",
+              "name": "FromMe",
+              "value": "={{ $json.body.data.key.fromMe }}",
+              "type": "string"
+            },
+            {
+              "id": "5e558c86-3ca2-4013-9610-db82cd8f7e2c",
+              "name": "bloquearAgente",
+              "value": "BloquearAgente",
+              "type": "string"
+            },
+            {
+              "id": "9ff2e3c1-8f74-4805-9a02-012835671a75",
+              "name": "MsgPicotada",
+              "value": "=MensagemPicotada{{ $json.body.data.key.remoteJid }}",
+              "type": "string"
+            },
+            {
+              "id": "1023a9dc-17b0-456b-be10-ec550bfa5e9c",
+              "name": "Message",
+              "value": "={{ $json.body.data.message.conversation }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        0
+      ],
+      "id": "6e774b10-5b0e-4921-be05-cd1c46d3c62c",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Edit Fields').item.json.TipoMensagem }}",
+                    "rightValue": "conversation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "3ccb196e-3791-4e3d-93de-716faa950e61"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7bd1540f-4c96-4f0f-8a23-383b50501e10",
+                    "leftValue": "={{ $('Edit Fields').item.json.TipoMensagem }}",
+                    "rightValue": "audioMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        3168,
+        0
+      ],
+      "id": "e92c65b1-0a2e-425c-9738-5a491ea95111",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data.base64",
+        "options": {
+          "fileName": "audio.mp3"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        3952,
+        112
+      ],
+      "id": "4de55f9e-1818-42f9-8338-368aaf770319",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk",
+          "mode": "list",
+          "cachedResultName": "Planilha de agendamento",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "agenda",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Telefone",
+              "lookupValue": "={{ $json.Telefone }}"
+            },
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $json.Email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1408,
+        0
+      ],
+      "id": "f9048d72-00ce-4a4b-9dd5-fb1a78b82ac1",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "q9ptJZS6er2mVsq6",
+          "name": "Google Sheets account 2"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        4160,
+        112
+      ],
+      "id": "4d70deec-ec2c-4d3b-9ad0-1c2191ed477d",
+      "name": "Transcribe a recording",
+      "alwaysOutputData": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "gBiQ7E6qk3rck3vZ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chat-api",
+        "operation": "get-media-base64",
+        "instanceName": "Agendamento",
+        "messageId": "={{ $('Webhook').item.json.body.data.key.id }}"
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        3392,
+        112
+      ],
+      "id": "ed633529-dae3-4f91-a105-0a224ee357b2",
+      "name": "Obter m dia em base64",
+      "credentials": {
+        "evolutionApi": {
+          "id": "F40P8TDJg96jh2hy",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6115fb41-355c-4bb1-85dc-4571d1af891e",
+              "name": "messagemAudioemTexto",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4384,
+        0
+      ],
+      "id": "efd5ec53-a594-4c7b-b071-6405c75a3f13",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3b902aeb-31c2-4684-aff1-c54475363062",
+              "leftValue": "={{ $('Edit Fields').item.json.FromMe }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4608,
+        0
+      ],
+      "id": "901b4779-70fa-4fb2-9c2c-52503028dc5b",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $('Edit Fields').item.json.bloquearAgente }}",
+        "value": "true",
+        "expire": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4832,
+        -96
+      ],
+      "id": "2c173e91-8107-464c-9b29-c8ccccf75790",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "qIawOIREkE8mpuKR",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "keys",
+        "keyPattern": "={{ $('Edit Fields').item.json.bloquearAgente }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        5024,
+        32
+      ],
+      "id": "dd9f5fca-c082-441a-ac12-17a6a5a2132a",
+      "name": "Redis1",
+      "credentials": {
+        "redis": {
+          "id": "qIawOIREkE8mpuKR",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d95e7615-23ff-4c05-9808-5307800b6862",
+              "leftValue": "={{ $json.BloquearAgente }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5264,
+        -16
+      ],
+      "id": "f2c64c6d-f083-44d3-88f0-4aa446137dc0",
+      "name": "If2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        5712,
+        -144
+      ],
+      "id": "6093ad5b-513e-4581-ad30-034567387520",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7a08d3fe-618f-4808-9eb5-14774a9aba9d",
+              "name": "MensagemAudiomaisTexto",
+              "value": "={{ $('Edit Fields1').item.json.messagemAudioemTexto }}{{ $('Edit Fields').item.json.Message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5440,
+        128
+      ],
+      "id": "c9b8836f-6703-42f8-bb2e-737cd0104f5d",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('Edit Fields').item.json.MsgPicotada }}",
+        "messageData": "={{ $json.MensagemAudiomaisTexto }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        5712,
+        128
+      ],
+      "id": "c4676797-97d4-40ee-8f59-93f2f3fd7783",
+      "name": "Redis2",
+      "credentials": {
+        "redis": {
+          "id": "qIawOIREkE8mpuKR",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5920,
+        128
+      ],
+      "id": "b573e8a2-e495-4065-a7b3-5b9447f2e44a",
+      "name": "Wait",
+      "webhookId": "e570ed83-e4df-4642-927b-56b7540896b2"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ $('Edit Fields').item.json.MsgPicotada }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        6144,
+        128
+      ],
+      "id": "bd9eba2a-eac7-4e5d-902f-80253f2f4ef9",
+      "name": "Redis3",
+      "credentials": {
+        "redis": {
+          "id": "qIawOIREkE8mpuKR",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Edit Fields').item.json.MsgPicotada }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        6368,
+        128
+      ],
+      "id": "1b45ed57-34f5-4ece-80b1-1f6644af2618",
+      "name": "Redis4",
+      "credentials": {
+        "redis": {
+          "id": "qIawOIREkE8mpuKR",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.toString }}",
+        "options": {
+          "systemMessage": "=Hora atual: {{ $now }}\nTelefone do paciente: {{ $('Edit Fields').item.json.Telefone }}, peça para o paciente confirmar se pode cadastrar usando esse telefone. \n\nIMPORTANTE:\nPor limitação do xhat não use mais de 4 request por minuto pule pra proxima msg e termine o serviço\n  Sempre inicie o agendamento verficando se o cliente ja possui cadastro, caso não tenha façao cadastro acessando a tool de Cadastro novo\nImportante:\n  Após todo agendamento ou reagendamento enviar email para o email dom cliente com as informações do agendamento todo detalhado \nQuando acionar o google sheets:\n  -Ao receber as informações do cliente(Nome,email,telefone) busque na planilha na tool Buscar cadastro\n-caso não possua registros, acesse a tool Cadastro novo e cadastre o cliente na planilha\n\n\nVocê se chama \"FluxionAI\", atua no atendimento de Whatsapps da Consultório Médico Boa Saúde, sua função é atender aos pacientes de maneira objetiva, ágil e eficiente, respondendo dúvidas e auxiliando em agendamentos, cancelamentos ou remarcações de consultas. Seja sempre objetivo, simpático, prestativo, humano e respeitoso.\n\n\nLOCALIZAÇÃO E CONTATO:\n- Endereço: Rua Formoso, numero 100, Setor America, CEP 00.000-000\n- Telefone e WhatsApp: (11) 00000-0000\n- E-mail: contato@consultorioboaforma.com.br\n- Site: www.consultorioboaforma.com.br\n\n\nMÉDICOS E ESPECIALIDADES:\n- Dr. Elizeu (Médico Urologista), ele essta disponivel para atender das 08:00 ás 18:00 de segunda a sexta feira. Pode agendar as consultas em qualquer horario dentro desse intervalo. Não agende aos sabados e domingos, mas deixe como sugestaõ horarios da proxima semana \n-Dr paulo (oncologista)\n\nVALORES E FORMAS DE PAGAMENTO:\n- Consulta: R$ 600,00\n- Formas de pagamento: PIX, dinheiro, cartão de débito ou crédito.\n- Plano de Saúde/Convênios aceitos: Unimed.\n\n\nOBJETIVO:\n1. Responder dúvidas sobre o Consultório como: \n- Especialidade médica do Consultório\n- Localização do Consultório\n- Formas de pagamento aceitáveis\n2. Agendar, consultar, remarcar e cancelar consultas de forma simples e eficaz.\n3. Sempre agir passo a passo para garantir rapidez e precisão em cada atendimento.\n\n\nINSTRUÇÃO IMPORTANTE:\n- Ao criar ou editar qualquer evento no Google Calendar, incluir sempre o telefone do paciente na descrição do agendamento, juntamente com o nome completo, data de nascimento, qual o médico escolhido e quaisquer outras informações relevantes fornecidas pelo paciente.\n\n\nINSTRUÇÕES DE COMO FALAR COM O PACIENTE:\n\n1. Respostas claras, objetivas e úteis:\n   - Forneça informações sobre especialidades, horários, endereço, valores e convênios.\n\n2. Não dê diagnósticos ou opiniões médicas:\n   - Se o paciente insistir em diagnóstico responda que só o médico na consulta que deverá passar o diagnostico.\n\n3. Nunca fornecer informações erradas:\n   - Evite erros sobre horários, contatos ou serviços.\n\n4. Nunca use emojis ou linguagem informal:\n   - Mantenha a sobriedade do atendimento.\n\n5. Nunca confirme consultas sem o retorno do MCP Google Calendar:\n   - Garanta que o evento foi criado com sucesso antes de dar a resposta final.\n\n6. Sempre faça duas verificações:\n   - Confirme sempre os dados para evitar equívocos em agendamentos, remarcações ou cancelamentos.\n\n\nCHAME A TOOL:\nGoogle sheets para: \n  - Buscar cadastro da pessoa\n  - Cadastrar o cliente caso não tenha os dados dele(nome, telefone email)\n  \nMCP Google Calendar para:\n  - Nunca agendar no calendário aos sabados e domingos, recuse o agendamento e espere o novo horario pra criar evento\n  - Agendar, listar, remarcar ou desmarcar consultas.\n  - Ao criar ou editar o evento, incluir:\n    - Nome completo\n    - Telefone\n    - Data de nascimento\n    - Informações adicionais (se houver)\n    - Se o cliente solicitar uma consulta com o dr Paulo faça as operações na agenda do dr paulo\nImportante: \n- Quando for solicitado para alterar/remarcar um agendamento primeiro delete o horario antigo e depois crie o novo horario.\n- Se você não conseguir fazer algo não diga isso para o paciente, ele não precisar saber da inconpetencia nossa. Apenas ofereça a solução.\nLembre-se: Dr paulo é pra verificar na agenda do dr paulo, busque os agendamentos, delete, modfique tudo por lá. Já o dr elizeu, faça tudo pela agenda do fluxion\n- Nunca agende mais de um paciente no mesmo horario. Ex: se o paciente \"x\" esta marcado para segunda feira as 08:00 então o paciente \"y\" não pode marcar no mesmo horario mesmo que ele peça.\n- Cada agendamento tem duração de 30 minutos;\n- Sempre coloque o telefone do paciente na descrição do agendamento.\n- Todo paciente só pode ter um agendamento por vez, se ele tentar fazer mais de um agendamento pergunte se ele quer desmarcar o primeiro agendamento dele.\n- O Summary deve ser com: nome do paciente, horario, nome do medico. Mantenha esse padrão para todos agendamentos.\n- Nunca agende datas ou horários passados.\n- Se o paciente perguntar sobre outros agendamentos que não é o dele não informe.\n- Nunca agende antes das 08:00.\n- Nunca agende depois das 18:00.\n\nLEMBRE-SE:\n- Qualquer assunto que não seja sobre a clinica ou sobre agendar uma consulta responda que o assunto não é apropriado e diga sua função.\n- Nunca forneça diagnósticos ou opiniões médicas.\n- Não utilize emoji.\n- Mantenha o tom profissional, claro, respeitoso e objetivo o tempo todo. \n- Sempre agendar datas futuras, nunca passadas.\n- Não fale que você é uma inteligência artificial faça um atendimento humanizado\n\nNunca agende ou remarque mais de um paciente no mesmo horario. Ex: se o paciente \"x\" esta marcado para segunda feira as 08:00 então o paciente \"y\" não pode marcar no mesmo horario mesmo que ele peça. O médico não pode atender 2 paciente no mesmo horario.\nSe o cliente não quiser mais a conulta acesse o google calendar e EXCLUA a consulta. \nSe ele quiser remarcar, acesse o calendário e verifique o horario novo que ele quer e EXCLUA o anterior\n\nEnviar para o gmail do cliente quando existir um agendamento ou reagendamento do cliente mande ao email do cliente pelo tool de email como se fosse o prontuario com todas as informaçoes que ele precisa saber como data, horario, dr e localização da clinica(lembrando q o pronturario feito para o gmail é fora a parte)"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        6800,
+        128
+      ],
+      "id": "5756ff83-690c-4091-a01a-187f6c72562c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Edit Fields').item.json.Telefone }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        6880,
+        352
+      ],
+      "id": "2d4ccbd2-c193-48f7-b34f-5b42a6e46ff1",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "qIawOIREkE8mpuKR",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "https://agendamento-prototipo-n8n.k4mul2.easypanel.host/mcp/googleCalendar"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        7072,
+        352
+      ],
+      "id": "577f06b1-b0e7-42f2-98a2-5c935964ed2b",
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8437af5-d050-4575-99d6-7f7355f21293",
+              "name": "toString",
+              "value": "={{ $('Redis3').item.json.propertyName.toJsonString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6592,
+        128
+      ],
+      "id": "24b19828-2b43-4173-9833-8acd5f8fa0f9",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "resource": "messages-api",
+        "instanceName": "Agendamento",
+        "remoteJid": "={{ $('Edit Fields').item.json.Telefone }}",
+        "messageText": "={{ $json.output }}",
+        "options_message": {
+          "delay": 4000
+        }
+      },
+      "type": "n8n-nodes-evolution-api.evolutionApi",
+      "typeVersion": 1,
+      "position": [
+        8272,
+        128
+      ],
+      "id": "9eb5d081-fc5d-48c2-8190-32cf5bdf26e4",
+      "name": "Enviar texto",
+      "credentials": {
+        "evolutionApi": {
+          "id": "F40P8TDJg96jh2hy",
+          "name": "Evolution account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Append_n8n_Attribution', ``, 'boolean') }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        7248,
+        352
+      ],
+      "id": "7f6f12db-9d2f-443c-9e90-ffa2d2ae30f2",
+      "name": "Send a message in Gmail",
+      "webhookId": "40f02b33-68f4-414e-8a24-ebfaa845198a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ygy8QgMGxp0vvHJN",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk",
+          "mode": "list",
+          "cachedResultName": "Planilha de agendamento",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "agenda",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nome": "={{ $('Edit Fields').item.json.Nome }}",
+            "Telefone": "={{ $('Edit Fields').item.json.Telefone }}",
+            "Email": "={{ $('Edit Fields').item.json.Email }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Telefone",
+              "displayName": "Telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2848,
+        80
+      ],
+      "id": "8d092463-19b7-4a60-825f-43c06c80f66e",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "q9ptJZS6er2mVsq6",
+          "name": "Google Sheets account 2"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c7abc38b-1976-46f2-833d-c012453c81b5",
+              "leftValue": "={{ $json.Telefone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2048,
+        0
+      ],
+      "id": "4788fca9-6619-4019-8712-fd035f0b8236",
+      "name": "If",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk",
+          "mode": "list",
+          "cachedResultName": "Planilha de agendamento",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "agenda",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('email', ``, 'string') }}",
+            "Telefone": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Telefone', ``, 'string') }}",
+            "Nome": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Nome', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Telefone",
+              "displayName": "Telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        7088,
+        832
+      ],
+      "id": "1016db6b-f353-4d0d-ae9b-0f0f43b96c89",
+      "name": "Cadastro novo",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "q9ptJZS6er2mVsq6",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk",
+          "mode": "list",
+          "cachedResultName": "Planilha de agendamento",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "agenda",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Nome",
+              "lookupValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values0_Value', ``, 'string') }}"
+            },
+            {
+              "lookupColumn": "email",
+              "lookupValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values1_Value', ``, 'string') }}"
+            },
+            {
+              "lookupColumn": "Telefone",
+              "lookupValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values2_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        6848,
+        800
+      ],
+      "id": "8b87c67e-5de9-4e25-b68e-0f6d40042b9b",
+      "name": "Buscar cadastro",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "q9ptJZS6er2mVsq6",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        6688,
+        352
+      ],
+      "id": "cfa7970b-af6f-4435-bae7-301c8b885a96",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "2PUpd73ALr23S2t5",
+          "name": "OpenAi account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "agendamento-prototipo-n8n.k4mul2.easypanel.host",
+            "user-agent": "axios/1.7.9",
+            "content-length": "987",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "content-type": "application/json",
+            "x-forwarded-for": "172.18.0.1",
+            "x-forwarded-host": "agendamento-prototipo-n8n.k4mul2.easypanel.host",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "146369307a2f",
+            "x-real-ip": "172.18.0.1"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "event": "messages.upsert",
+            "instance": "Agendamento",
+            "data": {
+              "key": {
+                "remoteJid": "559293215824@s.whatsapp.net",
+                "fromMe": false,
+                "id": "AC27E7B335785FBADA8DFB6B459B2032"
+              },
+              "pushName": "Jp",
+              "status": "DELIVERY_ACK",
+              "message": {
+                "conversation": "nao mandou email",
+                "messageContextInfo": {
+                  "deviceListMetadata": {
+                    "senderKeyHash": "ChhiEo+7xnJ6JA==",
+                    "senderTimestamp": "1752016358",
+                    "recipientKeyHash": "EH7K/Kocjlrprw==",
+                    "recipientTimestamp": "1752432292"
+                  },
+                  "deviceListMetadataVersion": 2,
+                  "messageSecret": "STylW6dKi3QPQ1fbxI+i9yyC78iPyo9Bs0mnSob0yoQ="
+                }
+              },
+              "messageType": "conversation",
+              "messageTimestamp": 1752464867,
+              "instanceId": "5f6671d2-7fcf-4a7c-a15f-a2c1ee20718b",
+              "source": "android"
+            },
+            "destination": "https://agendamento-prototipo-n8n.k4mul2.easypanel.host/webhook/5c59205e-9ee4-4baf-b198-848cdf5db9dc",
+            "date_time": "2025-07-14T00:47:47.561Z",
+            "sender": "559294704889@s.whatsapp.net",
+            "server_url": "https://agendamento-prototipo-evolution-api.k4mul2.easypanel.host",
+            "apikey": "15B1686FE155-4D3F-845C-42A610189AA7"
+          },
+          "webhookUrl": "https://agendamento-prototipo-n8n.k4mul2.easypanel.host/webhook/5c59205e-9ee4-4baf-b198-848cdf5db9dc",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Obter m dia em base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obter m dia em base64": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Redis2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis2": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Redis3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis3": {
+      "main": [
+        [
+          {
+            "node": "Redis4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis4": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar texto": {
+      "main": [
+        []
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cadastro novo": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar cadastro": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ea572307-18d6-4ffe-b698-88bbf306d46c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ce3d4527749418bd9ff2d2677ad7ae136886839e793e3a8a25dd524362da123e"
+  },
+  "id": "BKSypqiS001Uc48R",
+  "tags": []
+}

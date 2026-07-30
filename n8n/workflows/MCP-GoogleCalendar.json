@@ -1,0 +1,435 @@
+{
+  "name": "MCP",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "googleCalendar"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "41c60a97-9f69-4d74-803c-d35853b561c2",
+      "name": "MCP Server Trigger",
+      "webhookId": "b0070f4c-d3a3-4c80-ba9f-015362808e87"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "fluxionai7@gmail.com",
+          "mode": "list",
+          "cachedResultName": "fluxionai7@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -176,
+        192
+      ],
+      "id": "cbabcad4-43ca-4ff0-9b89-a7a72d838d03",
+      "name": "Criar evento",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "soh4BaJSvkUjiJBn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "calendar": {
+          "__rl": true,
+          "value": "fluxionai7@gmail.com",
+          "mode": "list",
+          "cachedResultName": "fluxionai7@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        192
+      ],
+      "id": "6fe302e0-e588-46dd-9b2a-d21214472451",
+      "name": "Buscar evento",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "soh4BaJSvkUjiJBn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "fluxionai7@gmail.com",
+          "mode": "list",
+          "cachedResultName": "fluxionai7@gmail.com"
+        },
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+        "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', ``, 'string') }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        208
+      ],
+      "id": "82892340-ae53-45c2-b9c1-072c409f4e53",
+      "name": "Get many events in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "soh4BaJSvkUjiJBn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "fluxionai7@gmail.com",
+          "mode": "list",
+          "cachedResultName": "fluxionai7@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "updateFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+          "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        208
+      ],
+      "id": "9b34869f-017a-4c08-ad51-cf80ba9b641f",
+      "name": "Atualizar Evento",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "soh4BaJSvkUjiJBn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "fluxionai7@gmail.com",
+          "mode": "list",
+          "cachedResultName": "fluxionai7@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {
+          "sendUpdates": "all"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        304
+      ],
+      "id": "f26b268b-c84c-4925-ae00-da2e06f93fde",
+      "name": "Deletar evento",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "soh4BaJSvkUjiJBn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "8029bf1b4c76214d7ac366f69338961f3fc12968254d8afbfcf420953c690562@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "agenda dr paulo"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -528,
+        -224
+      ],
+      "id": "e19e25d7-70a2-438a-9eb2-c1449aa188fd",
+      "name": "Agendar DR paulo",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "soh4BaJSvkUjiJBn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "8029bf1b4c76214d7ac366f69338961f3fc12968254d8afbfcf420953c690562@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "agenda dr paulo"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "updateFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+          "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -304,
+        -240
+      ],
+      "id": "aff60098-5af7-4115-a6e5-9b3067d34140",
+      "name": "Reagendar Dr paulo",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "soh4BaJSvkUjiJBn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "8029bf1b4c76214d7ac366f69338961f3fc12968254d8afbfcf420953c690562@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "agenda dr paulo"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -80,
+        -240
+      ],
+      "id": "c7b5d83e-5e49-4c09-ba46-dece8e966d9e",
+      "name": "Cancelar DRPaulo",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "soh4BaJSvkUjiJBn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "8029bf1b4c76214d7ac366f69338961f3fc12968254d8afbfcf420953c690562@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "agenda dr paulo"
+        },
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+        "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', ``, 'string') }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        -240
+      ],
+      "id": "7b495f7c-253a-4878-b6df-7df206a6ded7",
+      "name": "Listar Dr Paulo",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "soh4BaJSvkUjiJBn",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "calendar": {
+          "__rl": true,
+          "value": "8029bf1b4c76214d7ac366f69338961f3fc12968254d8afbfcf420953c690562@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "agenda dr paulo"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        -208
+      ],
+      "id": "32fd8099-dc57-4204-9c09-c39a19d97ba0",
+      "name": "Verificar Dr Paulo",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "soh4BaJSvkUjiJBn",
+          "name": "Google Calendar account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Criar evento": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar evento": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Evento": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deletar evento": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agendar DR paulo": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reagendar Dr paulo": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancelar DRPaulo": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listar Dr Paulo": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Dr Paulo": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b173198d-3eca-4fc6-8961-d0ee189bcdf7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ce3d4527749418bd9ff2d2677ad7ae136886839e793e3a8a25dd524362da123e"
+  },
+  "id": "FKT0yYwTSSva01G6",
+  "tags": []
+}
