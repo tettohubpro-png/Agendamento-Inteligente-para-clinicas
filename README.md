@@ -61,7 +61,17 @@ https://wa.me/5598992331897?text=Olá!%20Quero%20agendar%20um%20horário%20na%20
 - `CALENDAR_MAYCON_ID=primary`
 - Para mais barbeiros: `BARBEIROS_CALENDARS={"Maycon":"primary","Nome":"calendar-id"}`
 
-## Workflows n8n
+## Workflows n8n (WhatsApp autônomo)
 
-1. `AgendamentoAutomatico.json` — WhatsApp → agente BOMCORTE
-2. `MCP-GoogleCalendar.json` — tools de calendário
+Automação completa para a IA agendar sozinha via WhatsApp.
+
+```bash
+node scripts/build-n8n-workflows.js   # sincroniza prompt e config
+```
+
+| Workflow | Função |
+|----------|--------|
+| `AgendamentoAutomatico.json` | WhatsApp → agente IA → responde cliente |
+| `MCP-GoogleCalendar.json` | Tools Calendar (Agendar/Listar/Cancelar Maycon) |
+
+Guia completo de instalação: **[n8n/README.md](n8n/README.md)**

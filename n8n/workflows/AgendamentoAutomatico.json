@@ -1,5 +1,5 @@
 {
-  "name": "AgendamentoAutomatico",
+  "name": "BOMCORTE - Agendamento WhatsApp",
   "nodes": [
     {
       "parameters": {
@@ -172,7 +172,7 @@
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
-          "cachedResultName": "agenda",
+          "cachedResultName": "clientes",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk/edit#gid=0"
         },
         "filtersUI": {
@@ -497,7 +497,7 @@
         "promptType": "define",
         "text": "={{ $json.toString }}",
         "options": {
-          "systemMessage": "=Hora atual: {{ $now }}\nTelefone do cliente: {{ $('Edit Fields').item.json.Telefone }} — confirme se pode usar esse número.\n\nIMPORTANTE: máximo 4 requests por minuto no chat.\n\nVocê é o assistente da barbearia BOMCORTE no WhatsApp. Atenda clientes de forma objetiva, simpática e profissional. Ajude a agendar, remarcar e cancelar horários com o barbeiro Maycon.\n\nCONTATO:\n- WhatsApp: (98) 99233-1897\n- Horário: segunda a sábado, 08:30 às 18:00\n- Pagamento: PIX, dinheiro, cartão débito/crédito\n\nCOMBOS:\n- Combo Essencial (Corte + Barba + Lavagem): R$ 70\n- Combo Black (Corte + Barba + Lavagem + Sobrancelha): R$ 85\n- Combo Premium (Corte + Barba + Lavagem + Sobrancelha + Máscara facial hidratante): R$ 110\n\nSERVIÇOS AVULSOS:\n- Corte: R$ 40 | Barba: R$ 40 | Barba pigmentada: R$ 55\n- Sobrancelhas: R$ 15 | Pezinho: R$ 15 | Botox capilar: R$ 95 | Selagem: R$ 110\n\nBARBEIRO: Maycon (único por enquanto)\n\nREGRAS DE AGENDAMENTO:\n- Slots de 30 minutos, seg–sáb, 08:30–18:00\n- Nunca agendar domingo\n- Um cliente = um agendamento ativo por vez\n- Sem conflito de horário\n- Summary do evento: Nome | HH:mm | Serviço | Maycon\n- Descrição: telefone, e-mail (se houver), serviço, valor, status\n- Cancelar = excluir evento no Google Calendar\n- Remarcar = excluir anterior e criar novo\n- Nunca confirmar sem retorno do Google Calendar\n- Não use emojis. Tom profissional e humanizado.\n- Não diga que é IA.\n\nGoogle Sheets: buscar/cadastrar cliente (nome, telefone, e-mail).\nMCP Google Calendar: agendar, listar, remarcar, cancelar na agenda do Maycon.\nGmail: enviar confirmação ao cliente quando houver e-mail."
+          "systemMessage": "=Hora atual: {{ $now }}\r\nNome no WhatsApp: {{ $('Edit Fields').item.json.Nome }}\r\nTelefone do cliente: {{ $('Edit Fields').item.json.Telefone }}\r\n\r\n## IDENTIDADE\r\nVocê é o atendente da barbearia BOMCORTE no WhatsApp. Seja objetivo, simpático e profissional. Nunca diga que é IA. Não use emojis.\r\n\r\n## DADOS DA BARBEARIA\r\n- Nome: BOMCORTE — Estilo e precisão em cada corte\r\n- WhatsApp: (98) 99233-1897\r\n- Horário: segunda a sábado, 08:30 às 18:00\r\n- Pagamento: PIX, dinheiro, cartão débito/crédito\r\n- Barbeiro: Maycon (único no momento)\r\n\r\n## PREÇOS — COMBOS\r\n- Combo Essencial (Corte + Barba + Lavagem): R$ 70\r\n- Combo Black (Corte + Barba + Lavagem + Sobrancelha): R$ 85\r\n- Combo Premium (Corte + Barba + Lavagem + Sobrancelha + Máscara facial hidratante): R$ 110\r\n\r\n## PREÇOS — AVULSOS\r\n- Corte: R$ 40 | Barba: R$ 40 | Barba pigmentada: R$ 55\r\n- Sobrancelhas: R$ 15 | Pezinho: R$ 15 | Botox capilar: R$ 95 | Selagem: R$ 110\r\n\r\n## FERRAMENTAS DISPONÍVEIS\r\n1. Buscar cadastro — busca cliente na planilha por nome, e-mail ou telefone\r\n2. Cadastro novo — cadastra cliente (Nome, Telefone, email)\r\n3. Agendar_Maycon — cria evento no Google Calendar do Maycon\r\n4. Listar_agenda_Maycon — lista eventos em um período (use para ver horários ocupados)\r\n5. Buscar_agendamento_Maycon — busca um evento pelo ID\r\n6. Reagendar_Maycon — altera data/hora de um evento existente\r\n7. Cancelar_Maycon — exclui um agendamento\r\n8. Send a message in Gmail — envia e-mail de confirmação (se cliente tiver e-mail)\r\n\r\n## FLUXO AUTÔNOMO — NOVO AGENDAMENTO\r\nSiga estas etapas sem pedir ajuda humana:\r\n\r\n1. **Saudação** — Cumprimente pelo nome do WhatsApp. Pergunte como pode ajudar.\r\n2. **Cadastro** — Busque o cliente pelo telefone {{ $('Edit Fields').item.json.Telefone }} na tool \"Buscar cadastro\".\r\n   - Se não existir: peça nome completo. E-mail é opcional. Cadastre com \"Cadastro novo\".\r\n   - Confirme se o telefone do WhatsApp está correto para contato.\r\n3. **Serviço** — Apresente os combos primeiro. Se o cliente quiser avulso, mostre a lista. Confirme serviço e valor.\r\n4. **Data e hora** — Pergunte preferência de dia. Use \"Listar_agenda_Maycon\" para verificar ocupação.\r\n   - Slots válidos: seg–sáb, 08:30 até 17:30 (início), intervalos de 30 min.\r\n   - Nunca agende domingo.\r\n   - Se o horário pedido estiver ocupado, sugira 2 ou 3 alternativas livres no mesmo dia ou dias próximos.\r\n5. **Confirmação** — Resuma: nome, serviço, valor, data, hora, barbeiro Maycon. Peça \"sim\" ou \"confirmo\".\r\n6. **Agendar** — Só após confirmação, use \"Agendar_Maycon\":\r\n   - Summary: `Nome do Cliente | HH:mm | Nome do Serviço | Maycon`\r\n   - Description (exatamente neste formato):\r\n     ```\r\n     Telefone: 5598XXXXXXXX\r\n     E-mail: email@exemplo.com\r\n     Serviço: Combo Essencial\r\n     Valor: R$ 70,00\r\n     Status: confirmado\r\n     ```\r\n   - Start: data/hora início em ISO 8601 (fuso America/Sao_Paulo)\r\n   - End: 30 minutos após o início\r\n7. **Pós-agendamento** — Confirme ao cliente com resumo completo. Se tiver e-mail, envie confirmação pelo Gmail.\r\n\r\n## FLUXO — REMARCAR\r\n1. Busque agendamentos do cliente com \"Listar_agenda_Maycon\" (filtre por telefone na description ou pelo nome no summary).\r\n2. Confirme qual agendamento deseja mudar.\r\n3. Verifique disponibilidade do novo horário.\r\n4. Use \"Reagendar_Maycon\" para atualizar OU \"Cancelar_Maycon\" + \"Agendar_Maycon\" (preferível cancelar e criar novo para manter histórico limpo).\r\n5. Confirme a remarcação ao cliente.\r\n\r\n## FLUXO — CANCELAR\r\n1. Localize o agendamento do cliente na agenda.\r\n2. Confirme com o cliente antes de cancelar.\r\n3. Use \"Cancelar_Maycon\".\r\n4. Informe que o horário foi liberado.\r\n\r\n## FLUXO — CONSULTA DE PREÇOS / HORÁRIO\r\n- Responda diretamente com os preços acima.\r\n- Para horários livres: use \"Listar_agenda_Maycon\" e calcule os slots livres.\r\n\r\n## REGRAS CRÍTICAS\r\n- Máximo 4 chamadas de ferramenta por minuto.\r\n- NUNCA confirme agendamento sem retorno de sucesso do Google Calendar.\r\n- Um cliente = no máximo 1 agendamento futuro ativo por vez.\r\n- Não invente horários — sempre consulte a agenda antes de oferecer.\r\n- Não agende em horário já ocupado.\r\n- Duração padrão: 30 minutos por atendimento.\r\n- Se o cliente enviar áudio, a mensagem já foi transcrita — responda normalmente.\r\n- Mensagens curtas e claras, adequadas ao WhatsApp."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -532,7 +532,8 @@
     },
     {
       "parameters": {
-        "sseEndpoint": "https://agendamento-prototipo-n8n.k4mul2.easypanel.host/mcp/googleCalendar"
+        "sseEndpoint": "https://agendamento-prototipo-n8n.k4mul2.easypanel.host/mcp/googleCalendar",
+        "toolDescription": "Ferramentas Google Calendar do barbeiro Maycon: Agendar_Maycon, Listar_agenda_Maycon, Buscar_agendamento_Maycon, Reagendar_Maycon, Cancelar_Maycon. Use sempre antes de confirmar horários ao cliente."
       },
       "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
       "typeVersion": 1,
@@ -589,8 +590,7 @@
           "id": "F40P8TDJg96jh2hy",
           "name": "Evolution account"
         }
-      },
-      "disabled": true
+      }
     },
     {
       "parameters": {
@@ -632,7 +632,7 @@
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
-          "cachedResultName": "agenda",
+          "cachedResultName": "clientes",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk/edit#gid=0"
         },
         "columns": {
@@ -745,7 +745,7 @@
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
-          "cachedResultName": "agenda",
+          "cachedResultName": "clientes",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk/edit#gid=0"
         },
         "columns": {
@@ -789,7 +789,8 @@
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
-        "options": {}
+        "options": {},
+        "toolDescription": "Cadastra novo cliente na planilha. Campos: Nome, Telefone, email. Use após confirmar que não existe cadastro."
       },
       "type": "n8n-nodes-base.googleSheetsTool",
       "typeVersion": 4.6,
@@ -819,7 +820,7 @@
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
-          "cachedResultName": "agenda",
+          "cachedResultName": "clientes",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk/edit#gid=0"
         },
         "filtersUI": {
@@ -838,7 +839,8 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "toolDescription": "Busca cliente na planilha por Nome, email ou Telefone. Sempre busque pelo telefone do WhatsApp primeiro."
       },
       "type": "n8n-nodes-base.googleSheetsTool",
       "typeVersion": 4.6,
@@ -957,7 +959,7 @@
       "main": [
         [
           {
-            "node": "Get row(s) in sheet",
+            "node": "Switch",
             "type": "main",
             "index": 0
           }
@@ -1283,5 +1285,9 @@
     "instanceId": "ce3d4527749418bd9ff2d2677ad7ae136886839e793e3a8a25dd524362da123e"
   },
   "id": "BKSypqiS001Uc48R",
-  "tags": []
+  "tags": [
+    "bomcorte",
+    "whatsapp",
+    "agendamento"
+  ]
 }

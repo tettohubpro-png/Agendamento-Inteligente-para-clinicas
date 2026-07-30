@@ -1,0 +1,39 @@
+{
+  "barbearia": {
+    "nome": "BOMCORTE",
+    "slogan": "Estilo e precisão em cada corte",
+    "whatsapp": "(98) 99233-1897",
+    "whatsappLink": "https://wa.me/5598992331897",
+    "horario": "segunda a sábado, 08:30 às 18:00",
+    "pagamentos": ["PIX", "Dinheiro", "Cartão de débito", "Cartão de crédito"]
+  },
+  "barbeiros": [
+    { "nome": "Maycon", "calendarId": "primary", "calendarEmail": "fluxionai7@gmail.com" }
+  ],
+  "combos": [
+    { "nome": "Combo Essencial", "descricao": "Corte + Barba + Lavagem", "preco": 70 },
+    { "nome": "Combo Black", "descricao": "Corte + Barba + Lavagem + Sobrancelha", "preco": 85 },
+    { "nome": "Combo Premium", "descricao": "Corte + Barba + Lavagem + Sobrancelha + Máscara facial hidratante", "preco": 110 }
+  ],
+  "servicosAvulsos": [
+    { "nome": "Corte", "preco": 40 },
+    { "nome": "Barba", "preco": 40 },
+    { "nome": "Barba pigmentada", "preco": 55 },
+    { "nome": "Sobrancelhas", "preco": 15 },
+    { "nome": "Pezinho", "preco": 15 },
+    { "nome": "Botox capilar", "preco": 95 },
+    { "nome": "Selagem", "preco": 110 }
+  ],
+  "slots": {
+    "inicio": "08:30",
+    "fim": "18:00",
+    "duracaoMinutos": 30,
+    "diasAbertos": [1, 2, 3, 4, 5, 6]
+  },
+  "n8n": {
+    "evolutionInstance": "Agendamento",
+    "mcpPath": "googleCalendar",
+    "googleSheetsDocumentId": "1hFLM6PhKaIr5t51YqUal_X3O8sfyRh6x3KKNFqSgpXk",
+    "googleSheetsSheetName": "clientes"
+  }
+}
