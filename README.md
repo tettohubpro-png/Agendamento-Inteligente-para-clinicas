@@ -1,35 +1,86 @@
-# BOMCORTE — Barbearia
+# BOMCORTE — Sistema de Gestão para Barbearia
 
-Ecossistema de agendamento inteligente para a barbearia **BOMCORTE** (São Luís — MA).
+ERP completo para controlar toda a operação: do agendamento ao fechamento de caixa.
+
+## Módulos
+
+| # | Módulo | Rota | Papéis |
+|---|--------|------|--------|
+| 1 | Login (Google + RBAC) | `/login` | Todos |
+| 2 | Dashboard | `/` | Todos |
+| 3 | Clientes (CRM) | `/clientes` | Todos* |
+| 4 | Agendamento | `/agenda`, `/agendamentos` | Todos* |
+| 5 | Barbeiros | `/barbeiros` | Proprietário, Gerente |
+| 6 | Serviços | `/servicos` | Todos* |
+| 7 | Financeiro | `/financeiro` | Proprietário, Gerente |
+| 8 | Comissões | `/comissoes` | Proprietário, Gerente, Barbeiro |
+| 9 | Caixa | `/caixa` | Proprietário, Gerente, Recepcionista |
+| 10 | Estoque | `/estoque` | Proprietário, Gerente |
+| 11 | Relatórios | `/relatorios` | Proprietário, Gerente |
+| 12 | Configurações | `/configuracoes` | Proprietário |
+| 13 | IA Interna | `/ia` | Proprietário, Gerente |
+| 14 | Notificações | sino no topo | Todos |
+
+\* conforme permissões do papel
+
+## Hierarquia de acesso
+
+- **Proprietário** — acesso total
+- **Gerente** — operação + financeiro + relatórios
+- **Barbeiro** — agenda, clientes, suas comissões
+- **Recepcionista** — agenda, clientes, caixa
+
+Configure papéis em **Configurações → Usuários**.
 
 ## Canais
 
 | Quem | Onde |
 |------|------|
 | **Cliente** | WhatsApp (98) 99233-1897 — agente n8n |
-| **Barbeiro / equipe** | Painel web (Google login) |
+| **Equipe** | Painel web (Google login) |
 
 ## Estrutura
 
 ```
-├── n8n/workflows/          # Agente WhatsApp
-├── web/                    # Painel BOMCORTE + Netlify Functions
+├── supabase/migrations/    # Schema Postgres (produção)
+├── n8n/workflows/          # Agente WhatsApp autônomo
+├── web/                    # ERP React + Netlify Functions
 └── README.md
 ```
 
-## Painel web
+## Fluxo operacional
 
-- **Produção:** https://fluxionai-clinic-hub.netlify.app (renomear para bomcorte na Netlify)
-- Login com **Google** (cada barbeiro usa seu Gmail)
-- Barbeiro atual: **Maycon**
+```
+Cliente agenda (WhatsApp)
+        ↓
+Recepcionista confirma (painel)
+        ↓
+Barbeiro inicia atendimento
+        ↓
+Serviço finalizado → venda registrada
+        ↓
+Caixa atualizado → comissão calculada
+        ↓
+Dashboard atualizado
+```
 
-### Rodar local
+## Rodar local
 
 ```bash
 cd web
 npm install
 npx netlify dev
 ```
+
+## Banco de dados (Supabase)
+
+Para produção com persistência real, execute:
+
+```bash
+# supabase/migrations/001_bomcorte_erp.sql
+```
+
+O painel funciona offline com localStorage; Supabase substitui o store local quando configurado.
 
 ## Serviços e preços
 

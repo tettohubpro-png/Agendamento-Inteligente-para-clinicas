@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { useBarbearia } from '../context/BarbeariaContext'
-import { BARBEIROS, HORARIOS, type Barbeiro } from '../data/barbeariaConfig'
-import { StatusBadge } from './DashboardPage'
+import { useErp } from '../context/ErpContext'
+import { HORARIOS } from '../data/barbeariaConfig'
+import { StatusBadge } from '../components/ui'
 
 function startOfWeek(d = new Date()) {
   const date = new Date(d)
@@ -25,8 +25,9 @@ function addDays(d: Date, n: number) {
 const diasLabel = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 export function AgendaPage() {
-  const { agendamentos } = useBarbearia()
-  const [barbeiro, setBarbeiro] = useState<Barbeiro | 'todos'>('todos')
+  const { state } = useErp()
+  const { agendamentos, barbeiros } = state
+  const [barbeiro, setBarbeiro] = useState<string | 'todos'>('todos')
   const weekStart = useMemo(() => startOfWeek(), [])
   const dias = useMemo(() => Array.from({ length: 6 }, (_, i) => addDays(weekStart, i)), [weekStart])
 
@@ -46,11 +47,11 @@ export function AgendaPage() {
           <select
             className="rounded-xl border border-line bg-panel px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
             value={barbeiro}
-            onChange={(e) => setBarbeiro(e.target.value as Barbeiro | 'todos')}
+            onChange={(e) => setBarbeiro(e.target.value)}
           >
             <option value="todos">Todos</option>
-            {BARBEIROS.map((b) => (
-              <option key={b.nome} value={b.nome}>
+            {barbeiros.map((b) => (
+              <option key={b.id} value={b.nome}>
                 {b.nome}
               </option>
             ))}

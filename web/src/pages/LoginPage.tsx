@@ -37,7 +37,7 @@ export function LoginPage() {
         <p className="font-display text-6xl tracking-widest text-brand">BOMCORTE</p>
         <p className="mt-2 text-ink-muted">Estilo e precisão em cada corte</p>
         <p className="mt-6 text-sm text-ink-muted">
-          Painel para barbeiros e equipe. Entre com sua conta Google.
+          Sistema de gestão completo. Entre com sua conta Google.
         </p>
         <button
           type="button"

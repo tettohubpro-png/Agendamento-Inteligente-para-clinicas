@@ -1,29 +1,28 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { clearAuth, getProfile } from '../lib/auth'
-import { useBarbearia } from '../context/BarbeariaContext'
-
-const links = [
-  { to: '/', label: 'Dashboard' },
-  { to: '/agenda', label: 'Agenda' },
-  { to: '/agendamentos', label: 'Agendamentos' },
-  { to: '/clientes', label: 'Clientes' },
-  { to: '/servicos', label: 'Serviços' },
-  { to: '/configuracoes', label: 'Configurações' },
-]
+import { useAuth } from '../context/AuthContext'
+import { useErp } from '../context/ErpContext'
+import { navForRole, ROLE_LABELS } from '../lib/permissions'
+import { NotificationsBell } from './NotificationsBell'
 
 export function AppLayout() {
   const navigate = useNavigate()
   const profile = getProfile()
-  const { error, loading, refresh } = useBarbearia()
+  const { usuario } = useAuth()
+  const { loading, error, refresh, caixaAberto } = useErp()
+  const links = usuario ? navForRole(usuario.role) : []
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
       <aside className="border-b border-line bg-panel/90 backdrop-blur lg:border-b-0 lg:border-r lg:min-h-screen">
         <div className="px-5 py-6">
           <p className="font-display text-3xl tracking-widest text-brand">BOMCORTE</p>
-          <p className="mt-1 text-sm text-ink-muted">Painel da barbearia</p>
+          <p className="mt-1 text-sm text-ink-muted">Gestão completa</p>
           {profile?.email && (
-            <p className="mt-2 truncate text-xs text-ink-muted">{profile.email}</p>
+            <p className="mt-2 truncate text-xs text-ink-muted">
+              {profile.name ?? profile.email}
+              {usuario && <span className="block text-brand">{ROLE_LABELS[usuario.role]}</span>}
+            </p>
           )}
         </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-4 lg:flex-col lg:overflow-visible">
@@ -35,9 +34,7 @@ export function AppLayout() {
               className={({ isActive }) =>
                 [
                   'whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition',
-                  isActive
-                    ? 'bg-brand-soft text-brand'
-                    : 'text-ink-muted hover:bg-surface-2 hover:text-ink',
+                  isActive ? 'bg-brand-soft text-brand' : 'text-ink-muted hover:bg-surface-2 hover:text-ink',
                 ].join(' ')
               }
             >
@@ -46,31 +43,24 @@ export function AppLayout() {
           ))}
         </nav>
         <div className="hidden space-y-2 px-5 pb-6 lg:block">
-          <button
-            type="button"
-            onClick={() => void refresh()}
-            className="block text-sm text-ink-muted underline-offset-2 hover:text-ink hover:underline"
-          >
-            Atualizar agenda
+          {caixaAberto && (
+            <p className="text-xs text-brand">Caixa aberto</p>
+          )}
+          <button type="button" onClick={() => void refresh()} className="block text-sm text-ink-muted underline-offset-2 hover:text-ink hover:underline">
+            Atualizar dados
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              clearAuth()
-              navigate('/login')
-            }}
-            className="block text-sm text-ink-muted underline-offset-2 hover:text-ink hover:underline"
-          >
+          <button type="button" onClick={() => { clearAuth(); navigate('/login') }} className="block text-sm text-ink-muted underline-offset-2 hover:text-ink hover:underline">
             Sair
           </button>
         </div>
       </aside>
       <main className="px-4 py-6 sm:px-8 sm:py-8">
-        {loading && <p className="mb-4 text-sm text-ink-muted">Sincronizando Google Calendar…</p>}
+        <div className="mb-4 flex justify-end">
+          <NotificationsBell />
+        </div>
+        {loading && <p className="mb-4 text-sm text-ink-muted">Sincronizando…</p>}
         {error && (
-          <p className="mb-4 rounded-xl border border-red-900/50 bg-red-950/40 px-3 py-2 text-sm text-danger">
-            {error}
-          </p>
+          <p className="mb-4 rounded-xl border border-red-900/50 bg-red-950/40 px-3 py-2 text-sm text-danger">{error}</p>
         )}
         <Outlet />
       </main>

@@ -1,64 +1,50 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { useBarbearia, type Barbeiro } from '../context/BarbeariaContext'
-import {
-  BARBEIROS,
-  HORARIOS,
-  SERVICOS,
-  servicoPorId,
-} from '../data/barbeariaConfig'
-import { StatusBadge } from './DashboardPage'
+import { useErp } from '../context/ErpContext'
+import { Btn, PageHeader, StatusBadge } from '../components/ui'
+import type { AgendamentoStatus } from '../types/erp'
+import { HORARIOS } from '../data/barbeariaConfig'
+
+const STATUS_FLOW: AgendamentoStatus[] = ['agendado', 'confirmado', 'em_atendimento', 'finalizado', 'cancelado', 'nao_compareceu']
 
 export function AgendamentosPage() {
-  const { agendamentos, clientes, addAgendamento, updateAgendamentoStatus, cancelAgendamento } =
-    useBarbearia()
-  const [clienteId, setClienteId] = useState('')
+  const { state, createAgendamento, updateStatus, cancelAgendamento } = useErp()
+  const { agendamentos, clientes, servicos, barbeiros } = state
+  const [filtro, setFiltro] = useState<'todos' | AgendamentoStatus>('todos')
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
   const [email, setEmail] = useState('')
-  const [barbeiro, setBarbeiro] = useState<Barbeiro>('Maycon')
-  const [servicoId, setServicoId] = useState(SERVICOS[0].id)
+  const [barbeiroId, setBarbeiroId] = useState(barbeiros[0]?.id ?? '')
+  const [servicoId, setServicoId] = useState(servicos[0]?.id ?? '')
   const [data, setData] = useState(new Date().toISOString().slice(0, 10))
   const [hora, setHora] = useState('09:00')
   const [erro, setErro] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const servico = servicoPorId(servicoId)
+  const servico = servicos.find((s) => s.id === servicoId)
+  const barbeiro = barbeiros.find((b) => b.id === barbeiroId)
 
-  const selected = useMemo(
-    () => clientes.find((c) => c.id === clienteId),
-    [clientes, clienteId],
-  )
-
-  function onSelectCliente(id: string) {
-    setClienteId(id)
-    const c = clientes.find((x) => x.id === id)
-    if (c) {
-      setNome(c.nome)
-      setTelefone(c.telefone)
-      setEmail(c.email)
-    }
-  }
+  const lista = useMemo(() => {
+    const sorted = [...agendamentos].sort((a, b) => `${b.data}${b.hora}`.localeCompare(`${a.data}${a.hora}`))
+    if (filtro === 'todos') return sorted
+    return sorted.filter((a) => a.status === filtro)
+  }, [agendamentos, filtro])
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     setErro('')
-    if (!nome.trim()) {
-      setErro('Informe o nome do cliente.')
-      return
-    }
-    if (!servico) {
-      setErro('Selecione um serviço.')
+    if (!nome.trim() || !servico || !barbeiro) {
+      setErro('Preencha todos os campos.')
       return
     }
     setSaving(true)
     try {
-      await addAgendamento({
+      await createAgendamento({
         nome: nome.trim(),
         telefone: telefone.trim(),
         email: email.trim(),
-        barbeiro,
+        barbeiro: barbeiro.nome as 'Maycon',
         servico: servico.nome,
-        valor: servico.preco,
+        valor: servico.valor,
         data,
         hora,
         status: 'aguardando',
@@ -66,71 +52,67 @@ export function AgendamentosPage() {
       setNome('')
       setTelefone('')
       setEmail('')
-      setClienteId('')
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Falha ao agendar')
+      setErro(err instanceof Error ? err.message : 'Erro ao agendar')
     } finally {
       setSaving(false)
     }
   }
 
-  const ordenados = [...agendamentos].sort((a, b) =>
-    `${a.data}${a.hora}`.localeCompare(`${b.data}${b.hora}`),
-  )
-
   return (
-    <div className="mx-auto max-w-5xl">
-      <h1 className="font-display text-3xl tracking-wide text-ink">Agendamentos</h1>
-      <p className="mt-1 text-ink-muted">Criar, confirmar ou cancelar no Google Calendar.</p>
+    <div className="mx-auto max-w-6xl">
+      <PageHeader title="Agendamentos" subtitle="Fluxo completo: agendado → confirmado → atendimento → finalizado" />
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_340px]">
+      <div className="mb-4 flex flex-wrap gap-2">
+        {(['todos', ...STATUS_FLOW] as const).map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setFiltro(s)}
+            className={`rounded-lg px-3 py-1.5 text-sm capitalize ${filtro === s ? 'bg-brand text-surface' : 'bg-surface-2 text-ink-muted hover:text-ink'}`}
+          >
+            {s === 'todos' ? 'Todos' : s.replace('_', ' ')}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
         <div className="overflow-x-auto rounded-2xl border border-line bg-panel">
           <table className="w-full min-w-[700px] text-left text-sm">
             <thead className="border-b border-line bg-surface-2/60">
               <tr>
-                <th className="px-4 py-3 font-medium">Cliente</th>
-                <th className="px-4 py-3 font-medium">Serviço</th>
-                <th className="px-4 py-3 font-medium">Barbeiro</th>
-                <th className="px-4 py-3 font-medium">Data</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Ações</th>
+                <th className="px-4 py-3">Data/Hora</th>
+                <th className="px-4 py-3">Cliente</th>
+                <th className="px-4 py-3">Serviço</th>
+                <th className="px-4 py-3">Barbeiro</th>
+                <th className="px-4 py-3">Valor</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {ordenados.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-6 text-ink-muted">
-                    Nenhum agendamento encontrado.
-                  </td>
-                </tr>
-              )}
-              {ordenados.map((a) => (
+              {lista.map((a) => (
                 <tr key={a.id} className="border-b border-line/70">
+                  <td className="px-4 py-3">{a.data} {a.hora}</td>
                   <td className="px-4 py-3 font-medium">{a.clienteNome}</td>
-                  <td className="px-4 py-3 text-ink-muted">
-                    {a.servico}
-                    <span className="ml-1 text-brand">R$ {a.valor.toFixed(2)}</span>
-                  </td>
-                  <td className="px-4 py-3 text-ink-muted">{a.barbeiro}</td>
-                  <td className="px-4 py-3 text-ink-muted">
-                    {a.data} · {a.hora}
-                  </td>
+                  <td className="px-4 py-3 text-ink-muted">{a.servico}</td>
+                  <td className="px-4 py-3">{a.barbeiro}</td>
+                  <td className="px-4 py-3 text-brand">R$ {a.valor.toFixed(2)}</td>
+                  <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
                   <td className="px-4 py-3">
-                    <StatusBadge status={a.status} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-2">
-                      {a.status !== 'confirmado' && (
-                        <Action
-                          label="Confirmar"
-                          onClick={() => void updateAgendamentoStatus(a, 'confirmado')}
-                        />
+                    <div className="flex flex-wrap gap-1">
+                      {a.status === 'agendado' && (
+                        <Btn variant="secondary" onClick={() => void updateStatus(a.id, 'confirmado')}>Confirmar</Btn>
                       )}
-                      <Action
-                        label="Cancelar"
-                        danger
-                        onClick={() => void cancelAgendamento(a)}
-                      />
+                      {a.status === 'confirmado' && (
+                        <Btn variant="secondary" onClick={() => void updateStatus(a.id, 'em_atendimento')}>Iniciar</Btn>
+                      )}
+                      {a.status === 'em_atendimento' && (
+                        <Btn onClick={() => void updateStatus(a.id, 'finalizado')}>Finalizar</Btn>
+                      )}
+                      {!['cancelado', 'finalizado'].includes(a.status) && (
+                        <Btn variant="danger" onClick={() => void cancelAgendamento(a)}>Cancelar</Btn>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -139,150 +121,34 @@ export function AgendamentosPage() {
           </table>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-3 rounded-2xl border border-line bg-panel p-5">
-          <h2 className="font-display text-xl tracking-wide">Novo agendamento</h2>
-          {clientes.length > 0 && (
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium">Cliente existente</span>
-              <select
-                className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
-                value={clienteId}
-                onChange={(e) => onSelectCliente(e.target.value)}
-              >
-                <option value="">— Novo / manual —</option>
-                {clientes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nome}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          <Field label="Nome" value={nome} onChange={setNome} />
-          <Field label="Telefone" value={telefone} onChange={setTelefone} />
-          <Field label="E-mail (opcional)" value={email} onChange={setEmail} type="email" />
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium">Serviço</span>
-            <select
-              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
-              value={servicoId}
-              onChange={(e) => setServicoId(e.target.value)}
-            >
-              <optgroup label="Combos">
-                {SERVICOS.filter((s) => s.tipo === 'combo').map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.nome} — R$ {s.preco.toFixed(2)}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Avulsos">
-                {SERVICOS.filter((s) => s.tipo === 'avulso').map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.nome} — R$ {s.preco.toFixed(2)}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium">Barbeiro</span>
-            <select
-              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
-              value={barbeiro}
-              onChange={(e) => setBarbeiro(e.target.value as Barbeiro)}
-            >
-              {BARBEIROS.map((b) => (
-                <option key={b.nome} value={b.nome}>
-                  {b.nome}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium">Data</span>
-            <input
-              type="date"
-              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
-              value={data}
-              onChange={(e) => setData(e.target.value)}
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium">Horário</span>
-            <select
-              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
-              value={hora}
-              onChange={(e) => setHora(e.target.value)}
-            >
-              {HORARIOS.map((h) => (
-                <option key={h} value={h}>
-                  {h}
-                </option>
-              ))}
-            </select>
-          </label>
-          {servico && (
-            <p className="text-sm text-brand">
-              Total: R$ {servico.preco.toFixed(2)}
-            </p>
-          )}
-          {selected && (
-            <p className="text-xs text-ink-muted">Usando dados de {selected.nome}.</p>
-          )}
+        <form onSubmit={onSubmit} className="space-y-3 rounded-2xl border border-line bg-panel p-5 h-fit">
+          <h2 className="font-display text-xl">Novo agendamento</h2>
           {erro && <p className="text-sm text-danger">{erro}</p>}
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full rounded-xl bg-brand px-4 py-2.5 font-medium text-surface hover:bg-brand-deep disabled:opacity-60"
-          >
-            {saving ? 'Agendando…' : 'Agendar'}
+          <select className="w-full rounded-xl border border-line bg-surface px-3 py-2" value="" onChange={(e) => {
+            const c = clientes.find((x) => x.id === e.target.value)
+            if (c) { setNome(c.nome); setTelefone(c.telefone); setEmail(c.email ?? '') }
+          }}>
+            <option value="">Cliente cadastrado…</option>
+            {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+          <input className="w-full rounded-xl border border-line bg-surface px-3 py-2" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+          <input className="w-full rounded-xl border border-line bg-surface px-3 py-2" placeholder="Telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+          <input className="w-full rounded-xl border border-line bg-surface px-3 py-2" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <select className="w-full rounded-xl border border-line bg-surface px-3 py-2" value={barbeiroId} onChange={(e) => setBarbeiroId(e.target.value)}>
+            {barbeiros.map((b) => <option key={b.id} value={b.id}>{b.nome}</option>)}
+          </select>
+          <select className="w-full rounded-xl border border-line bg-surface px-3 py-2" value={servicoId} onChange={(e) => setServicoId(e.target.value)}>
+            {servicos.map((s) => <option key={s.id} value={s.id}>{s.nome} — R$ {s.valor}</option>)}
+          </select>
+          <input type="date" className="w-full rounded-xl border border-line bg-surface px-3 py-2" value={data} onChange={(e) => setData(e.target.value)} />
+          <select className="w-full rounded-xl border border-line bg-surface px-3 py-2" value={hora} onChange={(e) => setHora(e.target.value)}>
+            {HORARIOS.map((h) => <option key={h} value={h}>{h}</option>)}
+          </select>
+          <button type="submit" disabled={saving} className="w-full rounded-xl bg-brand px-4 py-2.5 font-medium text-surface hover:bg-brand-deep disabled:opacity-50">
+            {saving ? 'Salvando…' : 'Agendar'}
           </button>
         </form>
       </div>
     </div>
-  )
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  type = 'text',
-}: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  type?: string
-}) {
-  return (
-    <label className="block text-sm">
-      <span className="mb-1 block font-medium">{label}</span>
-      <input
-        type={type}
-        className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink outline-none ring-brand/30 focus:ring-2"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    </label>
-  )
-}
-
-function Action({
-  label,
-  onClick,
-  danger,
-}: {
-  label: string
-  onClick: () => void
-  danger?: boolean
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`text-xs font-medium underline-offset-2 hover:underline ${danger ? 'text-danger' : 'text-brand'}`}
-    >
-      {label}
-    </button>
   )
 }
