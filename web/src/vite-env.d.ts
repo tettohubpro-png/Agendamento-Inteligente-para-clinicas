@@ -2,8 +2,9 @@
 
 interface ImportMetaEnv {
   readonly VITE_GOOGLE_CLIENT_ID: string
-  readonly VITE_CALENDAR_ELIZEU_ID: string
-  readonly VITE_CALENDAR_PAULO_ID: string
+  readonly VITE_CALENDAR_MAYCON_ID: string
+  readonly VITE_SUPABASE_URL: string
+  readonly VITE_SUPABASE_ANON_KEY: string
 }
 
 interface ImportMeta {

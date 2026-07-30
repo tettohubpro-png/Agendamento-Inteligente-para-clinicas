@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useErp } from '../context/ErpContext'
 import { navForRole, ROLE_LABELS } from '../lib/permissions'
 import { NotificationsBell } from './NotificationsBell'
+import { isSupabaseConfigured } from '../lib/supabase'
 
 export function AppLayout() {
   const navigate = useNavigate()
@@ -23,6 +24,9 @@ export function AppLayout() {
               {profile.name ?? profile.email}
               {usuario && <span className="block text-brand">{ROLE_LABELS[usuario.role]}</span>}
             </p>
+          )}
+          {isSupabaseConfigured() && (
+            <p className="mt-1 text-xs text-ok">Supabase conectado</p>
           )}
         </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-4 lg:flex-col lg:overflow-visible">
